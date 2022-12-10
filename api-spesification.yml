@@ -1,0 +1,900 @@
+openapi: '3.0.2'
+info:
+  title: Pokedex
+  version: '1.0.0'
+  description: Api spesification for Technical Test at Tentang Anak
+  contact:
+    name: Rizky Darmawan
+    email: darmawanrizky43@gmail.com
+    url: https://www.linkedin.com/in/rizkydarmawan/
+servers:
+  - url: http://localhost:3000
+paths:
+  /api/v1/login:
+   post:
+      summary: Login
+      security:
+        - bearerAuth: []
+      tags:
+        - "Authentication"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestLoginBody"
+            example:
+              username: jhon
+              password: password
+      responses:
+        200:
+          description: Login success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginSuccess"
+                example:
+                  code: 200
+                  status: success
+                  message: Login success
+                  data: {
+                    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                  }
+        400:
+          description: Username or password incorrect 
+          content:
+            application/json:
+               schema:
+                  oneOf:
+                    - $ref: "#/components/schemas/LoginFailed"
+                    - $ref: "#/components/schemas/ValidationErrors"
+                  example:
+                    Login Failed:
+                      code: 400
+                      status: error
+                      message: login failed
+                      data: {
+                        errors: "username or password incorrect"
+                      }
+                    ValidationErrors:
+                    code: 400
+                    status: error
+                    message: login failed
+                    data: {
+                      errors: [
+                        "Key: 'LoginInput.Username' Error:Field validation for 'Username' failed on the 'username' tag",
+                        "Key: 'LoginInput.Password' Error:Field validation for 'Password' failed on the 'required' tag"
+                      ]
+                    }
+
+  api/v1/categories:
+    get:
+      summary: Get all categories
+      description: <b>Note:</b> Access admin only
+      security:
+        - bearerAuth: []
+      tags:
+        - "Categories"
+      responses:
+        200:
+          description: Get all list of categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseCategoriesAndTypes" 
+              example:
+
+                Success fetch all categories:
+                  code: 200
+                  status: success
+                  message: List of categories
+                  data:
+                    - id: "ba1a5547-2c32-482b-a37e-d69819780ce2"
+                      name: "Leaf Monster"
+
+                    - id: "7105dd5d-de34-4ec7-a17d-c3a7911d3927"
+                      name: "Diving Monster"
+                      
+                    - id: "e742d7cf-e6bd-4770-b1cf-317caab8f4e8"
+                      name: "Lizard Monster"
+
+    api/v1/types:
+      get:
+        summary: Get all types
+        description: <b>Note:</b> Access admin only
+        security:
+          - bearerAuth: []
+        tags:
+          - "Types"
+        responses:
+          200:
+            description: Get all list of types
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/ResponseCategoriesAndTypes" 
+                example:
+
+                  Success fetch all categories:
+                    code: 200
+                    status: success
+                    message: List of categories
+                    data:
+                      - id: "cf963f2c-3f9f-422a-8aee-5a9060e3025e"
+                        name: "GRASS"
+
+                      - id: "73fb06b8-65f7-484d-bf6b-6d420a32bbe8"
+                        name: "PSYCHIC"
+                        
+                      - id: "cc1aefde-a2ac-43a3-bd63-28acef9ee3d8"
+                        name: "FLYING"
+
+                      - id: "1531c355-76b3-4c6f-89ba-89a59ca8c8f1"
+                        name: "FIRE"
+
+                      - id: "00c86427-31b4-4e32-8efc-53cfba198e59"
+                        name: "WATER"
+
+                      - id: "036cd0b2-690f-40d7-8acc-d566f2e8efaf"
+                        name: "ELECTRIC"
+
+                      - id: "9a11d4e3-df84-4852-81e1-3b9170d29a8c"
+                        name: "BUG"
+
+  /api/v1/monsters:
+    get:
+      summary: Find all list of monsters
+      tags:
+        - "Monsters"
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: Search by name
+        - in: query
+          name: types
+          schema:
+            type: array
+          description: Filters by some types
+        - in: query
+          name: status_catched
+          schema:
+            type: boolean
+          description: Filters by status catched or uncatched
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [name, id, asc, desc]
+          description: Sorting data
+      responses:
+        200:
+          description: Find all list of monsters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseArraysObjectOfMonsters" 
+              example:
+
+                Success fetch all monsters:
+                  code: 200
+                  status: success
+                  message: List of monsters
+                  data:
+                    - id: "cd84146c-715f-47e8-a817-28331d49729c"
+                      name: "Chikorita"
+                      category_name: "Leal Monster"
+                      catched: false
+                      image: "http://localhost:3000/static/images/chikorita.jpg"
+                      type_monster: ["GRASS"]
+
+                    - id: "fad7a07f-b4cc-428b-b405-124c1589f32c"
+                      name: "Lugia"
+                      category_name: "Diving Monster"
+                      catched: true
+                      image: "http://localhost:3000/static/images/lugia.jpg"
+                      type_monster: ["PSYCHIC", "FLYING"]
+
+                Query Parameters Not Found fetch all monsters:
+                  code: 200
+                  status: success
+                  message: List of monsters
+                  data: []
+
+    post:
+      summary: Add monsters
+      description: <b>Note:</b> Access admin only
+      security:
+        - bearerAuth: []
+      tags:
+        - "Monsters"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMonsterBody"
+            example:
+              name: "Chikorita"
+              category_id: "1e93f997-8de7-4420-852f-fdf056c5481e"
+              type_monster: ["GRASS", "FLYING", "WATER"]
+              description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla placerat quam augue, id ultricies ligula cursus aliquam. Mauris sit amet est metus. In nisl quam, accumsan sed nibh in, dapibus ultrices libero. Vivamus hendrerit gravida leo, mattis consectetur magna ultrices vitae. Nullam volutpat suscipit magna, vel placerat metus pellentesque nec. Suspendisse tincidunt mi dui, sit amet ullamcorper erat varius sit amet. Aliquam erat volutpat."
+              length: 5.1
+              weight: 216
+              hp: 150
+              attack: 270
+              defends: 80
+              speed: 477
+              image: "chikorita.jpg" 
+      responses:
+        201:
+          description: Monster created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                  status:
+                    type: string
+                  message:
+                    type: string
+                example:
+                  code: 201
+                  status: success
+                  message: Monster has been created
+        400:
+          description: Validation Errors
+          content:
+            application/json:
+              schema: 
+                 $ref: "#/components/schemas/ValidationErrors"
+              example:
+                ValidationErrors:
+                  code: 400
+                  status: error
+                  message: create monster failed
+                  data: {
+                    errors: [
+                      "Key: 'RegisterInput.Name' Error:Field validation for 'Name' failed on the 'required' tag",
+                      "Key: 'RegisterInput.Category_id' Error:Field validation for 'Category_id' failed on the 'required' tag",
+                      "Key: 'RegisterInput.Type_Monster' Error:Field validation for 'Type_Monster' failed on the 'required' tag",
+                      "Key: 'RegisterInput.Description' Error:Field validation for 'Description' failed on the 'required' tag",
+                      "Key: 'RegisterInput.Length' Error:Field validation for 'Length' failed on the 'required' tag",
+                      "Key: 'RegisterInput.Weight' Error:Field validation for 'Weight' failed on the 'required' tag",
+                      "Key: 'RegisterInput.Hp' Error:Field validation for 'Hp' failed on the 'required' tag",
+                      "Key: 'RegisterInput.Attacks' Error:Field validation for 'Attacks' failed on the 'required' tag",
+                      "Key: 'RegisterInput.Defends' Error:Field validation for 'Defends' failed on the 'required' tag",
+                      "Key: 'RegisterInput.Speed' Error:Field validation for 'Speed' failed on the 'required' tag",
+                    ]
+                  }
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                Unauthorized:
+                  code: 401
+                  status: error
+                  message: unauthorized
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                Forbidden:
+                  code: 403
+                  status: error
+                  message: forbidden
+
+  /api/v1/monsters/{id}:
+    get:
+      summary: Get profile detail monster
+      tags:
+        - "Monsters"
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Id Monster
+      responses:
+        200:
+          description: Find profile detail of monster
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseSingleObjectOfMonsters" 
+              example:
+                Success fetch profile detail of monsters:
+                  code: 200
+                  status: success
+                  message: Profile detail of monsters
+                  data:
+                    - id: "cd84146c-715f-47e8-a817-28331d49729c"
+                      name: "Chikorita"
+                      category_name: "Leal Monster"
+                      type_monster: ["GRASS"]
+                      catched: false
+                      image: "http://localhost:3000/static/images/chikorita.jpg"
+                      length: 5.1
+                      weight: 216
+                      hp: 150
+                      attack: 270
+                      defends: 80
+                      speed: 477
+                      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla placerat quam augue, id ultricies ligula cursus aliquam. Mauris sit amet est metus. In nisl quam, accumsan sed nibh in, dapibus ultrices libero. Vivamus hendrerit gravida leo, mattis consectetur magna ultrices vitae. Nullam volutpat suscipit magna, vel placerat metus pellentesque nec. Suspendisse tincidunt mi dui, sit amet ullamcorper erat varius sit amet. Aliquam erat volutpat."
+        404:
+          description: Monster not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseWithoutData" 
+              example:
+                Success fetch profile detail of monsters:
+                  code: 404
+                  status: error
+                  message: monster with id cd84146c-715f-47e8-a817-28331d49729c not found 
+    patch:
+      summary: Update monster
+      description: <b>Note:</b> Access admin only
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Id Monster
+      security:
+        - bearerAuth: []
+      tags:
+        - "Monsters"
+      requestBody:
+        required: true
+        description: Each field is empty, will contain with before data.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMonsterBody"
+            example:
+              name: "Lugia"
+              category_id: "1e93f997-8de7-4420-852f-fdf056c5481e"
+              type_monster: ["PSYCHIH", "FLYING"]
+              description: "Updated"
+              catched: true
+              length: 7.0
+              weight: 516
+              hp: 200
+              attack: 177
+              defends: 99
+              speed: 432
+              image: "lugia.jpg" 
+      responses:
+        200:
+          description: Update monster success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseUpdateSuccessMonsters" 
+              example:
+                code: 200
+                status: success
+                message: Monster updated
+                data:
+                    id: cd84146c-715f-47e8-a817-28331d49729c
+                    name: "Lugia"
+                    category_id: "1e93f997-8de7-4420-852f-fdf056c5481e"
+                    type_monster: ["PSYCHIH", "FLYING"]
+                    description: "Updated"
+                    catched: true
+                    length: 7.0
+                    weight: 516
+                    hp: 200
+                    attack: 177
+                    defends: 99
+                    speed: 432
+                    image: "lugia.jpg" 
+        400:
+          description: Monster not found
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                Bad Request:
+                  code: 400
+                  status: error
+                  message: Monster with id cd84146c-715f-47e8-a817-28331d49729c not found 
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                Unauthorized:
+                  code: 401
+                  status: error
+                  message: unauthorized
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                Forbidden:
+                  code: 403
+                  status: error
+                  message: forbidden
+    delete:
+      summary: Delete monster
+      description: <b>Note:</b> Access admin only
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Id Monster
+      security:
+        - bearerAuth: []
+      tags:
+        - "Monsters"
+      responses:
+        200:
+          description: Delete monster success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                code: 200
+                status: success
+                message: Monster deleted
+        400:
+          description: Monster not found
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                Bad Request:
+                  code: 400
+                  status: error
+                  message: Monster with id cd84146c-715f-47e8-a817-28331d49729c not found 
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                Unauthorized:
+                  code: 401
+                  status: error
+                  message: unauthorized
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                Forbidden:
+                  code: 403
+                  status: error
+                  message: forbidden
+
+  /api/v1/monsters/{id}/captured:
+    patch:
+      summary: Update status monster as captured
+      description: <b>Note:</b> Access user only
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Id Monster
+      security:
+        - bearerAuth: []
+      tags:
+        - "Monsters"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                catched:
+                  type: boolean
+                  required:
+                    - "true"
+            example:
+              catched: true
+      responses:
+        200:
+          description: Update status monster as captured success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReponseWithoutData" 
+              example:
+                code: 200
+                status: success
+                message: monster with id cd84146c-715f-47e8-a817-28331d49729c updated 
+        400:
+          description: Monster not found
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                Bad Request:
+                  code: 400
+                  status: error
+                  message: Monster with id cd84146c-715f-47e8-a817-28331d49729c not found 
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                Unauthorized:
+                  code: 401
+                  status: error
+                  message: unauthorized
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                Forbidden:
+                  code: 403
+                  status: error
+                  message: forbidden
+components:
+  schemas:
+
+  # Components Schema Login User
+    RequestLoginBody:
+      type: object
+      properties:
+        username:
+          type: string
+          required:
+            - "true"
+        password:
+          type: string
+          required:
+            - "true"
+    
+    LoginSuccess:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+
+    LoginFailed:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            errors:
+              type: string
+      
+# End Components Schema Login User
+
+  # Schema categories and types
+    ResponseCategoriesAndTypes:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        status:
+          type: string
+        message:
+          type: string
+        data:
+         type: array
+         items:
+          type: object
+          properties:
+            name:
+              type: string
+              required:
+                - "true"
+  # End Schema categories and types
+
+  # Schema mosters
+    ResponseArraysObjectOfMonsters:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              category_name:
+                description: "Result on relation to table category"
+                type: string
+              catched:
+                type: boolean
+              image:
+                type: string
+              type_monster:
+                type: array
+
+    ResponseUpdateSuccessMonsters:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            name:
+              type: string
+              required:
+                - "true"
+            category_id:
+              type: string
+              required:
+                - "true"
+            type_monster:
+              type: array
+              required:
+                - "true"
+            description:
+              type: string
+              description: "In database set text"
+              required:
+                - "true"
+            catched:
+              type: boolean
+              required:
+                - "true"
+            length:
+              type: number
+              description: "In database set float"
+              required:
+                - "true"
+            weight:
+              type: integer
+              required:
+                - "true"
+            hp:
+              type: integer
+              required:
+                - "true"
+            attack:
+              type: integer
+              required:
+                - "true"
+            defends:
+              type: integer
+              required:
+                - "true"
+            speed:
+              type: integer
+              required:
+              - "true"
+            image:
+              type: string
+              required:
+                - "true"
+
+    ResponseSingleObjectOfMonsters:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            category_name:
+              description: "Result on relation to table category"
+              type: string
+            catched:
+              type: boolean
+            image:
+              type: string
+            type_monster:
+              type: array
+            description:
+              type: string
+            length:
+              type: number
+            weight:
+              type: integer
+            hp:
+              type: integer
+            attack:
+              type: integer
+            defends:
+              type: integer
+            speed:
+              type: integer
+            
+    CreateMonsterBody:
+      type: object
+      properties:
+        name:
+          type: string
+          required:
+            - "true"
+        category_id:
+          type: string
+          required:
+            - "true"
+        type_monster:
+          type: array
+          required:
+            - "true"
+        description:
+          type: string
+          description: "In database set text"
+          required:
+            - "true"
+        length:
+          type: number
+          description: "In database set float"
+          required:
+            - "true"
+        weight:
+          type: integer
+          required:
+            - "true"
+        hp:
+          type: integer
+          required:
+            - "true"
+        attack:
+          type: integer
+          required:
+            - "true"
+        defends:
+          type: integer
+          required:
+            - "true"
+        speed:
+          type: integer
+          required:
+          - "true"
+        image:
+          type: string
+          required:
+            - "true"
+            
+    UpdateMonsterBody:
+      type: object
+      properties:
+        name:
+          type: string
+        category_id:
+          type: string
+        type_monster:
+          type: array
+        description:
+          type: string
+          description: "In database set text"
+        catched:
+          type: string
+        length:
+          type: number
+          description: "In database set float"
+        weight:
+          type: integer
+        hp:
+          type: integer
+        attack:
+          type: integer
+        defends:
+          type: integer
+        speed:
+          type: integer
+        image:
+          type: string
+  # End schema monster
+
+  # Schema response success
+    ReponseWithoutData:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        status:
+          type: string
+        message:
+          type: string
+  # End schema reponse success
+
+  # Schema response 
+    ResponseWithoutData:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        status:
+          type: string
+        message:
+          type: string
+
+    ValidationErrors:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        status:
+          type: string
+        message:
+          type: string
+        data:
+          type: array
+          properties:
+            errors:
+              type: string
+    # End schema response 
+        
+        
+          
