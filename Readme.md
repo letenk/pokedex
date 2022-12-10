@@ -18,8 +18,9 @@
 
 # Todo
 - [ ] Documentation
-    - [ ] Swagger
+    - [x] Swagger
     - [ ] Postman
+    - [x] Database Schema
 - [ ] Architecture diagram flow CRUD and Login
 - [ ] CRUD
     - [ ] Get all of list monsters
@@ -35,4 +36,3 @@
     - [ ] Login
         - [ ] Generate Token JWT
 - [ ] Containerization
-- [ ] Upload into Github
