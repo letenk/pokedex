@@ -1,9 +1,11 @@
 # How To Run
 
 # Documentation
+[Database Schema](https://dbdiagram.io/d/63934a1abae3ed7c4545dab5)
+
 [Postman Documentation](https://documenter.getpostman.com/view/12132212/2s8YevnUpD)
 
-[Swagger/API Spesification](https://app.swaggerhub.com/apis-docs/DARMAWANRIZKY43/use_deall_rest_api_users/1.0.0#/)
+[Swagger/API Spesification](https://app.swaggerhub.com/apis/DARMAWANRIZKY43/POKEDEX/1.0.0)
 
 
 # Architecture Diagram
@@ -20,15 +22,13 @@
     - [ ] Postman
 - [ ] Architecture diagram flow CRUD and Login
 - [ ] CRUD
-    - [ ] Get all of list
+    - [ ] Get all of list monsters
         - [ ] Search by name
         - [ ] Filter by type
-        - [ ] Sort by name
-        - [ ] Sort by id
-        - [ ] Sort by order (options)
-        - [ ] Sort by order (Type)
-    - [ ] Get one
-    - [ ] Create (admin only)
+        - [ ] Filter by type catched or uncatched (options)
+        - [ ] Sort by name, id, ascending or descending
+    - [ ] Get profile detail monster
+    - [ ] Add (admin only)
     - [ ] Update (admin only)
     - [ ] Update as mark a moster as captured (user only)
     - [ ] Delete (admin only)
