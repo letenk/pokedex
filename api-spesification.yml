@@ -33,13 +33,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LoginSuccess"
-                example:
-                  code: 200
-                  status: success
-                  message: Login success
-                  data: {
-                    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-                  }
+              example:
+                code: 200
+                status: success
+                message: Login success
+                data: {
+                  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                }
         400:
           description: Username or password incorrect 
           content:
@@ -67,7 +67,7 @@ paths:
                       ]
                     }
 
-  api/v1/categories:
+  /api/v1/categories:
     get:
       summary: Get all categories
       description: <b>Note:</b> Access admin only
@@ -98,48 +98,48 @@ paths:
                     - id: "e742d7cf-e6bd-4770-b1cf-317caab8f4e8"
                       name: "Lizard Monster"
 
-    api/v1/types:
-      get:
-        summary: Get all types
-        description: <b>Note:</b> Access admin only
-        security:
-          - bearerAuth: []
-        tags:
-          - "Types"
-        responses:
-          200:
-            description: Get all list of types
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/ResponseCategoriesAndTypes" 
-                example:
+  /api/v1/types:
+    get:
+      summary: Get all types
+      description: <b>Note:</b> Access admin only
+      security:
+        - bearerAuth: []
+      tags:
+        - "Types"
+      responses:
+        200:
+          description: Get all list of types
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseCategoriesAndTypes" 
+              example:
 
-                  Success fetch all categories:
-                    code: 200
-                    status: success
-                    message: List of categories
-                    data:
-                      - id: "cf963f2c-3f9f-422a-8aee-5a9060e3025e"
-                        name: "GRASS"
+                Success fetch all categories:
+                  code: 200
+                  status: success
+                  message: List of categories
+                  data:
+                    - id: "cf963f2c-3f9f-422a-8aee-5a9060e3025e"
+                      name: "GRASS"
 
-                      - id: "73fb06b8-65f7-484d-bf6b-6d420a32bbe8"
-                        name: "PSYCHIC"
-                        
-                      - id: "cc1aefde-a2ac-43a3-bd63-28acef9ee3d8"
-                        name: "FLYING"
+                    - id: "73fb06b8-65f7-484d-bf6b-6d420a32bbe8"
+                      name: "PSYCHIC"
+                      
+                    - id: "cc1aefde-a2ac-43a3-bd63-28acef9ee3d8"
+                      name: "FLYING"
 
-                      - id: "1531c355-76b3-4c6f-89ba-89a59ca8c8f1"
-                        name: "FIRE"
+                    - id: "1531c355-76b3-4c6f-89ba-89a59ca8c8f1"
+                      name: "FIRE"
 
-                      - id: "00c86427-31b4-4e32-8efc-53cfba198e59"
-                        name: "WATER"
+                    - id: "00c86427-31b4-4e32-8efc-53cfba198e59"
+                      name: "WATER"
 
-                      - id: "036cd0b2-690f-40d7-8acc-d566f2e8efaf"
-                        name: "ELECTRIC"
+                    - id: "036cd0b2-690f-40d7-8acc-d566f2e8efaf"
+                      name: "ELECTRIC"
 
-                      - id: "9a11d4e3-df84-4852-81e1-3b9170d29a8c"
-                        name: "BUG"
+                    - id: "9a11d4e3-df84-4852-81e1-3b9170d29a8c"
+                      name: "BUG"
 
   /api/v1/monsters:
     get:
@@ -567,8 +567,14 @@ paths:
                   status: error
                   message: forbidden
 components:
-  schemas:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Authentication with JWT
 
+  schemas:
   # Components Schema Login User
     RequestLoginBody:
       type: object
