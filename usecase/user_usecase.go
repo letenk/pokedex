@@ -3,10 +3,12 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/letenk/pokedex/models/domain"
 	"github.com/letenk/pokedex/models/web"
 	"github.com/letenk/pokedex/repository"
 	"github.com/letenk/pokedex/util"
@@ -15,6 +17,7 @@ import (
 
 type UserUsecase interface {
 	Login(ctx context.Context, req web.UserLoginRequest) (string, error)
+	FindOneByID(ctx context.Context, id string) (domain.User, error)
 }
 
 type Claim struct {
@@ -81,4 +84,21 @@ func (s *userUsecase) Login(ctx context.Context, req web.UserLoginRequest) (stri
 
 	// If success, return token
 	return signedToken, nil
+}
+
+func (s *userUsecase) FindOneByID(ctx context.Context, id string) (domain.User, error) {
+	// Get one
+	user, err := s.repository.FindByID(ctx, id)
+
+	// If user not found
+	if user.ID == "" {
+		message := fmt.Sprintf("user with ID %s Not Found", id)
+		return user, errors.New(message)
+	}
+
+	if err != nil {
+		return user, err
+	}
+
+	return user, nil
 }

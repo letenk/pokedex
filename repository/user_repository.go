@@ -10,6 +10,7 @@ import (
 
 type UserRepository interface {
 	FindByUsername(ctx context.Context, username string) (domain.User, error)
+	FindByID(ctx context.Context, id string) (domain.User, error)
 }
 
 type userRepository struct {
@@ -28,6 +29,21 @@ func (r *userRepository) FindByUsername(ctx context.Context, username string) (d
 	var user domain.User
 
 	err := r.db.WithContext(ctx).Where("username = ?", username).Find(&user).Error
+	if err != nil {
+		return user, err
+	}
+
+	return user, nil
+}
+
+func (r *userRepository) FindByID(ctx context.Context, id string) (domain.User, error) {
+	// Create a context in order to disconnect after 15 seconds
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+
+	var user domain.User
+
+	err := r.db.WithContext(ctx).Where("id = ?", id).Find(&user).Error
 	if err != nil {
 		return user, err
 	}

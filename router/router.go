@@ -6,6 +6,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/letenk/pokedex/handlers"
+	"github.com/letenk/pokedex/middleware"
 	"github.com/letenk/pokedex/repository"
 	"github.com/letenk/pokedex/usecase"
 	"gorm.io/gorm"
@@ -27,6 +28,11 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	usecaseUser := usecase.NewUsecaseUser(repositoryUser)
 	handlerUser := handlers.NewHandlerUser(usecaseUser)
 
+	// Use layers category
+	repositoryCategory := repository.NewCategoryRepository(db)
+	usecaseCategory := usecase.NewUsecaseCategory(repositoryCategory)
+	handlerCategory := handlers.NewHandlerCategory(usecaseCategory)
+
 	// Route home
 	router.GET("/", func(c *gin.Context) {
 		resp := gin.H{"say": "Server is healthy 💪"}
@@ -38,6 +44,8 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 
 	// Login
 	v1.POST("/login", handlerUser.Login)
+	// Categories
+	v1.GET("/category", middleware.AuthMiddleware(usecaseUser), handlerCategory.FindAll)
 
 	return router
 }

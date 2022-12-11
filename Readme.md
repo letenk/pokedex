@@ -33,8 +33,8 @@
     - [ ] Update (admin only)
     - [ ] Update as mark a moster as captured (user only)
     - [ ] Delete (admin only)
-    - [ ] Get all of list categories 
-    - [ ] Get all of list types 
+    - [x] Get all of list categories (admin only)
+    - [ ] Get all of list types (admin only)
     - [x] Login
         - [x] Generate Token JWT
 - [ ] Containerization
