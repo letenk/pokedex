@@ -39,9 +39,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Import DB seed data
-      run: psql -d postgresql://postgres@localhost/pokedex -f scripts/db/dump.sql
-      env:
-          PGPASSWORD: secret
+      run: psql -d postgresql://root:secret@localhost:5432/pokedex -f scripts/db/dump.sql
 
     - name: Test
       run: make test
