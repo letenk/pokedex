@@ -40,7 +40,9 @@ jobs:
 
     - name: Create table and seed data
       run: |
-        docker ps
+        docker exec -it postgres /bin/sh
+        echo "hello"
+        exit
 
     - name: Test
       run: make test
