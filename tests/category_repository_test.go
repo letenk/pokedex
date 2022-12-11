@@ -20,7 +20,6 @@ func TestFindAllCategories(t *testing.T) {
 
 	for _, data := range todos {
 		require.NotEmpty(t, data.ID)
-		require.NotEmpty(t, data.ID)
 		require.NotEmpty(t, data.Name)
 		require.NotEmpty(t, data.CreatedAt)
 		require.NotEmpty(t, data.UpdatedAt)
