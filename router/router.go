@@ -33,6 +33,11 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	usecaseCategory := usecase.NewUsecaseCategory(repositoryCategory)
 	handlerCategory := handlers.NewHandlerCategory(usecaseCategory)
 
+	// Use layers type
+	repositoryType := repository.NewTypeRespository(db)
+	usecaseType := usecase.NewUsecaseType(repositoryType)
+	handlerType := handlers.NewHandlerType(usecaseType)
+
 	// Route home
 	router.GET("/", func(c *gin.Context) {
 		resp := gin.H{"say": "Server is healthy 💪"}
@@ -46,6 +51,8 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	v1.POST("/login", handlerUser.Login)
 	// Categories
 	v1.GET("/category", middleware.AuthMiddleware(usecaseUser), handlerCategory.FindAll)
+	// Types
+	v1.GET("/type", middleware.AuthMiddleware(usecaseUser), handlerType.FindAll)
 
 	return router
 }
