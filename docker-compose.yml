@@ -1,0 +1,36 @@
+version: "3.9"
+services:
+  postgres:
+    container_name: pokdex_db
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=pokedex
+    volumes:
+      - db-pokedex:/var/lib/postgresql/data/
+
+  pokedex:
+    container_name: pokedex_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    entrypoint:
+      [
+        "/app/wait-for.sh",
+        "postgres:5432",
+        "--",
+        "/app/start.sh"
+      ]
+    command: [ "/app/main" ]
+
+volumes:
+  db-pokedex:
