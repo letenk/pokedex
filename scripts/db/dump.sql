@@ -58,3 +58,7 @@ INSERT INTO users (username, fullname, password, role) VALUES('admin', 'ADMIN', 
 INSERT INTO categories (name) VALUES('Leaf Monster'), ('Diving Monster'), ('Lizard Monster');
 
 INSERT INTO types (name) VALUES('GRASS'), ('PSYCHIC'), ('FLYING'), ('FIRE'), ('WATER'), ('ELECTRIC'), ('BUG');
+
+SELECT * FROM users;
+SELECT * FROM categories;
+SELECT * FROM types;
