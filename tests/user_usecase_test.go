@@ -68,6 +68,9 @@ func TestFindOneByID(t *testing.T) {
 	repository := repository.NewUserRepository(ConnTest)
 	usecase := usecase.NewUsecaseUser(repository)
 
+	userRoleAdmin, _ := repository.FindByUsername(context.Background(), "admin")
+	userRoleUser, _ := repository.FindByUsername(context.Background(), "user")
+
 	testCases := []struct {
 		name string
 		user domain.User
@@ -75,21 +78,21 @@ func TestFindOneByID(t *testing.T) {
 		{
 			name: "success_find_admin",
 			user: domain.User{
-				ID:       "34a79b77-5201-4fc8-8b8d-7e43350badd4",
-				Username: "admin",
-				Fullname: "ADMIN",
+				ID:       userRoleAdmin.ID,
+				Username: userRoleAdmin.Username,
+				Fullname: userRoleAdmin.Fullname,
 				Password: "password",
-				Role:     "admin",
+				Role:     userRoleAdmin.Role,
 			},
 		},
 		{
 			name: "success_find_user",
 			user: domain.User{
-				ID:       "692cf812-e480-443e-b6d5-11b280047dcf",
-				Username: "user",
-				Fullname: "USER",
+				ID:       userRoleUser.ID,
+				Username: userRoleUser.Username,
+				Fullname: userRoleUser.Fullname,
 				Password: "password",
-				Role:     "user",
+				Role:     userRoleUser.Role,
 			},
 		},
 	}
