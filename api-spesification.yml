@@ -97,6 +97,28 @@ paths:
                       
                     - id: "e742d7cf-e6bd-4770-b1cf-317caab8f4e8"
                       name: "Lizard Monster"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                Unauthorized:
+                  code: 401
+                  status: error
+                  message: unauthorized
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                Forbidden:
+                  code: 403
+                  status: error
+                  message: forbidden
 
   /api/v1/types:
     get:
@@ -140,6 +162,28 @@ paths:
 
                     - id: "9a11d4e3-df84-4852-81e1-3b9170d29a8c"
                       name: "BUG"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                Unauthorized:
+                  code: 401
+                  status: error
+                  message: unauthorized
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/ReponseWithoutData"
+              example:
+                Forbidden:
+                  code: 403
+                  status: error
+                  message: forbidden
 
   /api/v1/monsters:
     get:
