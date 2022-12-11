@@ -1,14 +1,14 @@
 package router
 
 import (
-	"database/sql"
 	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func SetupRouter(db *sql.DB) *gin.Engine {
+func SetupRouter(db *gorm.DB) *gin.Engine {
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"https://*", "http://*"},
