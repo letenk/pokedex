@@ -4,9 +4,11 @@ import "github.com/spf13/viper"
 
 // Config stores all configuration of the application
 type Config struct {
-	APP_PORT  string `mapstructure:"APP_PORT"`
-	DB_DRIVER string `mapstructure:"DB_DRIVER"`
-	DB_SOURCE string `mapstructure:"DB_SOURCE"`
+	APP_PORT       string `mapstructure:"APP_PORT"`
+	JWT_SECRET_KEY string `mapstructure:"JWT_SECRET_KEY"`
+	DB_DRIVER      string `mapstructure:"DB_DRIVER"`
+	DB_SOURCE      string `mapstructure:"DB_SOURCE"`
+	DB_SOURCE_TEST string `mapstructure:"DB_SOURCE_TEST"`
 }
 
 // LoadConfig reads configuration from file or environment variables.

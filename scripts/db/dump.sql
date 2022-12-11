@@ -53,7 +53,7 @@ ALTER TABLE "monster_type" ADD FOREIGN KEY ("monster_id") REFERENCES "monsters" 
 ALTER TABLE "monster_type" ADD FOREIGN KEY ("type_id") REFERENCES "types" ("id");
 
 -- Seed data
-INSERT INTO users (username, fullname, password, role) VALUES('admin', 'ADMIN', '5f4dcc3b5aa765d61d8327deb882cf99', 'admin'), ('user', 'USER', '5f4dcc3b5aa765d61d8327deb882cf99', 'user');
+INSERT INTO users (username, fullname, password, role) VALUES('admin', 'ADMIN', '$2a$04$euYwgSigV4MDtKR0pvnBXumov0IsFsfumR0fsjgwGcEqXNOpmp0Ju', 'admin'), ('user', 'USER', '$2a$04$yYhf5Y3wsZoYmlGWc.uX8OCfgA2oJgGl5GX73n5rvRlUpZQtOuOFG', 'user');
 
 INSERT INTO categories (name) VALUES('Leaf Monster'), ('Diving Monster'), ('Lizard Monster');
 
