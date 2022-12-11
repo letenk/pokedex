@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   postgres:
-    container_name: pokdex_db
+    container_name: pokedex_db
     build:
       context: .
       dockerfile: Dockerfile.postgres
