@@ -262,7 +262,7 @@ paths:
             example:
               name: "Chikorita"
               category_id: "1e93f997-8de7-4420-852f-fdf056c5481e"
-              type_monster: ["GRASS", "FLYING", "WATER"]
+              type_id: ["916a0035-a939-4d45-a2cf-f0fb2b22c488", "d4bb5ab4-01df-493f-ac8c-4e3ad56c8199", "6ad17ba2-1052-424c-9f52-d36b432144aa"]
               description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla placerat quam augue, id ultricies ligula cursus aliquam. Mauris sit amet est metus. In nisl quam, accumsan sed nibh in, dapibus ultrices libero. Vivamus hendrerit gravida leo, mattis consectetur magna ultrices vitae. Nullam volutpat suscipit magna, vel placerat metus pellentesque nec. Suspendisse tincidunt mi dui, sit amet ullamcorper erat varius sit amet. Aliquam erat volutpat."
               length: 5.1
               weight: 216
@@ -305,7 +305,7 @@ paths:
                     errors: [
                       "Key: 'RegisterInput.Name' Error:Field validation for 'Name' failed on the 'required' tag",
                       "Key: 'RegisterInput.Category_id' Error:Field validation for 'Category_id' failed on the 'required' tag",
-                      "Key: 'RegisterInput.Type_Monster' Error:Field validation for 'Type_Monster' failed on the 'required' tag",
+                      "Key: 'RegisterInput.Type_ID' Error:Field validation for 'Type_ID' failed on the 'required' tag",
                       "Key: 'RegisterInput.Description' Error:Field validation for 'Description' failed on the 'required' tag",
                       "Key: 'RegisterInput.Length' Error:Field validation for 'Length' failed on the 'required' tag",
                       "Key: 'RegisterInput.Weight' Error:Field validation for 'Weight' failed on the 'required' tag",
@@ -834,7 +834,7 @@ components:
           type: string
           required:
             - "true"
-        type_monster:
+        type_id:
           type: array
           required:
             - "true"

@@ -38,6 +38,11 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	usecaseType := usecase.NewUsecaseType(repositoryType)
 	handlerType := handlers.NewHandlerType(usecaseType)
 
+	// Use layers montser
+	repositoryMonster := repository.NewMonsterRespository(db)
+	usecaseMonster := usecase.NewUsecaseMonster(repositoryMonster)
+	handlerMonster := handlers.NewHandlerMonster(usecaseMonster)
+
 	// Route home
 	router.GET("/", func(c *gin.Context) {
 		resp := gin.H{"say": "Server is healthy 💪"}
@@ -53,6 +58,11 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	v1.GET("/category", middleware.AuthMiddleware(usecaseUser), handlerCategory.FindAll)
 	// Types
 	v1.GET("/type", middleware.AuthMiddleware(usecaseUser), handlerType.FindAll)
+
+	// Group endpoint monster
+	monster := v1.Group("/monster")
+	// Create monster
+	monster.POST("", middleware.AuthMiddleware(usecaseUser), handlerMonster.Create)
 
 	return router
 }

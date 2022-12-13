@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/letenk/pokedex/models/web"
@@ -50,22 +49,7 @@ func TestFindAllCategoryHandlerTest(t *testing.T) {
 			var token string
 			// if tc.name same failed_unauthorized_as_guest dont try login
 			if tc.name != "failed_unauthorized_as_guest" {
-				// Data body
-				dataBody := fmt.Sprintf(`{"username": "%s", "password": "%s"}`, tc.req.Username, tc.req.Password)
-				requestBody := strings.NewReader(dataBody)
-				request := httptest.NewRequest(http.MethodPost, "http://localhost:3000/api/v1/login", requestBody)
-				request.Header.Add("Content-Type", "application/json")
-				recorder := httptest.NewRecorder()
-
-				RouteTest.ServeHTTP(recorder, request)
-
-				response := recorder.Result()
-
-				// Read all response
-				body, _ := io.ReadAll(response.Body)
-				var responseBody map[string]interface{}
-				json.Unmarshal(body, &responseBody)
-				token = responseBody["data"].(map[string]interface{})["token"].(string)
+				token = GetToken(tc.req)
 			}
 
 			// Test access categories

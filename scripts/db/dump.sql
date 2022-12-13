@@ -41,16 +41,21 @@ CREATE TABLE IF NOT EXISTS monsters (
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
 
-CREATE TABLE IF NOT EXISTS  monster_type (
+CREATE TABLE IF NOT EXISTS  monster_types (
   "monster_id" uuid NOT NULL,
   "type_id" uuid NOT NULL
 );
 
 ALTER TABLE "monsters" ADD FOREIGN KEY ("category_id") REFERENCES "categories" ("id");
 
-ALTER TABLE "monster_type" ADD FOREIGN KEY ("monster_id") REFERENCES "monsters" ("id");
+ALTER TABLE "monster_types" ADD FOREIGN KEY ("monster_id") REFERENCES "monsters" ("id");
 
-ALTER TABLE "monster_type" ADD FOREIGN KEY ("type_id") REFERENCES "types" ("id");
+ALTER TABLE "monster_types" ADD FOREIGN KEY ("type_id") REFERENCES "types" ("id");
+
+-- Delete data
+DELETE FROM users;
+DELETE FROM categories;
+DELETE FROM types;
 
 -- Seed data
 INSERT INTO users (username, fullname, password, role) VALUES('admin', 'ADMIN', '$2a$04$euYwgSigV4MDtKR0pvnBXumov0IsFsfumR0fsjgwGcEqXNOpmp0Ju', 'admin'), ('user', 'USER', '$2a$04$yYhf5Y3wsZoYmlGWc.uX8OCfgA2oJgGl5GX73n5rvRlUpZQtOuOFG', 'user');
@@ -59,6 +64,7 @@ INSERT INTO categories (name) VALUES('Leaf Monster'), ('Diving Monster'), ('Liza
 
 INSERT INTO types (name) VALUES('GRASS'), ('PSYCHIC'), ('FLYING'), ('FIRE'), ('WATER'), ('ELECTRIC'), ('BUG');
 
+-- Select
 SELECT * FROM users;
 SELECT * FROM categories;
 SELECT * FROM types;

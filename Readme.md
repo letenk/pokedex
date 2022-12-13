@@ -37,4 +37,7 @@
     - [x] Get all of list types (admin only)
     - [x] Login
         - [x] Generate Token JWT
-- [ ] Containerization
+- [x] Containerization
+- [ ] Github Workflows
+    - [x] Test
+    - [ ] Create image docker and push into docker hub

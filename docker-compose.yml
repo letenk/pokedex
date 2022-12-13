@@ -31,6 +31,8 @@ services:
         "/app/start.sh"
       ]
     command: [ "/app/main" ]
+    volumes:
+      - ./images/:/app/images
 
 volumes:
   db-pokedex:

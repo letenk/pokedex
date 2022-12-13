@@ -1,6 +1,8 @@
 package web
 
-import "github.com/go-playground/validator/v10"
+import (
+	"github.com/go-playground/validator/v10"
+)
 
 // FormatValidationError for iteration error from package validator
 // Because when error, will the return many error
