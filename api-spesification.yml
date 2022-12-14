@@ -291,12 +291,26 @@ paths:
                   status: success
                   message: Monster has been created
         400:
-          description: Validation Errors
+          description: Validation errors format images, file size and field empty.
           content:
             application/json:
               schema: 
                  $ref: "#/components/schemas/ValidationErrors"
-              example:
+              example:  
+                ValidationErrorFormatImage:
+                  code: 400
+                  status: error
+                  message: create monster failed
+                  data: {
+                      "errors": "File must be format jpeg or png"
+                  }
+                ValidationErrorFileSize:
+                  code: 400
+                  status: error
+                  message: create monster failed
+                  data: {
+                      "errors": "Files cannot exceed 2MB"
+                  }
                 ValidationErrors:
                   code: 400
                   status: error
