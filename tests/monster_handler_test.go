@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"image"
-	"image/color"
-	"image/png"
 	"io"
 	"log"
 	"mime/multipart"
@@ -20,39 +17,6 @@ import (
 	"github.com/letenk/pokedex/util"
 	"github.com/stretchr/testify/require"
 )
-
-func CreateImage() image.Image {
-	width := 200
-	height := 100
-
-	upLeft := image.Point{0, 0}
-	lowRight := image.Point{width, height}
-
-	img := image.NewRGBA(image.Rectangle{upLeft, lowRight})
-
-	// Colors are defined by Red, Green, Blue, Alpha uint8 values.
-	cyan := color.RGBA{100, 200, 200, 0xff}
-
-	// Set color for each pixel.
-	for x := 0; x < width; x++ {
-		for y := 0; y < height; y++ {
-			switch {
-			case x < width/2 && y < height/2: // upper left quadrant
-				img.Set(x, y, cyan)
-			case x >= width/2 && y >= height/2: // lower right quadrant
-				img.Set(x, y, color.White)
-			default:
-				// Use zero value.
-			}
-		}
-	}
-
-	// Encode as PNG.
-	f, _ := os.Create("image.png")
-	png.Encode(f, img)
-
-	return img
-}
 
 func TestCreateMonsterHandler(t *testing.T) {
 	// Get data random category and type
@@ -165,7 +129,7 @@ func TestCreateMonsterHandler(t *testing.T) {
 				writer.WriteField("type_id", randType)
 
 				// Read file from local
-				file, _ := os.Open("image.png")
+				file, _ := os.Open("file_sample/image.png")
 				defer file.Close()
 
 				part, err := writer.CreateFormFile("image", "image.png")
@@ -174,7 +138,6 @@ func TestCreateMonsterHandler(t *testing.T) {
 					log.Fatal(err)
 				}
 
-				_ = CreateImage()
 				_, err = io.Copy(part, file)
 				if err != nil {
 					log.Fatal(err)

@@ -16,11 +16,9 @@ import (
 
 func TestCreateMonsterUsecase(t *testing.T) {
 	t.Parallel()
-	// Create image
-	_ = CreateImage()
 
 	// Read file from local
-	file, _ := os.Open("image.png")
+	file, _ := os.Open("file_sample/image.png")
 	defer file.Close()
 
 	// File name formate
