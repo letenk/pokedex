@@ -15,6 +15,9 @@
 # Tech Stack
 - **Golang**
 - **PostgreSQL**
+- **AWS RDS**
+- **AWS S3**
+- **Docker**
 
 # Todo
 - [ ] Documentation
@@ -29,7 +32,8 @@
         - [ ] Filter by type catched or uncatched (options)
         - [ ] Sort by name, id, ascending or descending
     - [ ] Get profile detail monster
-    - [ ] Add (admin only)
+    - [x] Add (admin only)
+        - [x] Upload image to aws s3
     - [ ] Update (admin only)
     - [ ] Update as mark a moster as captured (user only)
     - [ ] Delete (admin only)

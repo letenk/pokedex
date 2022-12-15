@@ -1,18 +1,58 @@
 package tests
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"image"
+	"image/color"
+	"image/png"
 	"io"
+	"log"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
-	"strings"
+	"os"
+	"strconv"
 	"testing"
 
 	"github.com/letenk/pokedex/models/web"
 	"github.com/letenk/pokedex/util"
 	"github.com/stretchr/testify/require"
 )
+
+func CreateImage() image.Image {
+	width := 200
+	height := 100
+
+	upLeft := image.Point{0, 0}
+	lowRight := image.Point{width, height}
+
+	img := image.NewRGBA(image.Rectangle{upLeft, lowRight})
+
+	// Colors are defined by Red, Green, Blue, Alpha uint8 values.
+	cyan := color.RGBA{100, 200, 200, 0xff}
+
+	// Set color for each pixel.
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			switch {
+			case x < width/2 && y < height/2: // upper left quadrant
+				img.Set(x, y, cyan)
+			case x >= width/2 && y >= height/2: // lower right quadrant
+				img.Set(x, y, color.White)
+			default:
+				// Use zero value.
+			}
+		}
+	}
+
+	// Encode as PNG.
+	f, _ := os.Create("image.png")
+	png.Encode(f, img)
+
+	return img
+}
 
 func TestCreateMonsterHandler(t *testing.T) {
 	// Get data random category and type
@@ -42,8 +82,8 @@ func TestCreateMonsterHandler(t *testing.T) {
 				Attack:      uint16(util.RandomInt(50, 500)),
 				Defends:     uint16(util.RandomInt(50, 500)),
 				Speed:       uint16(util.RandomInt(50, 500)),
-				Image:       util.RandomString(10),
-				TypeID:      []string{randType, randType, randType},
+				// Image:       util.RandomString(10),
+				TypeID: []string{randType, randType, randType},
 			},
 		},
 		{
@@ -63,8 +103,8 @@ func TestCreateMonsterHandler(t *testing.T) {
 				Attack:      uint16(util.RandomInt(50, 500)),
 				Defends:     uint16(util.RandomInt(50, 500)),
 				Speed:       uint16(util.RandomInt(50, 500)),
-				Image:       util.RandomString(10),
-				TypeID:      []string{randType, randType, randType},
+				// Image:       util.RandomString(10),
+				TypeID: []string{randType, randType, randType},
 			},
 		},
 		{
@@ -81,8 +121,8 @@ func TestCreateMonsterHandler(t *testing.T) {
 				Attack:      uint16(util.RandomInt(50, 500)),
 				Defends:     uint16(util.RandomInt(50, 500)),
 				Speed:       uint16(util.RandomInt(50, 500)),
-				Image:       util.RandomString(10),
-				TypeID:      []string{randType, randType, randType},
+				// Image:       util.RandomString(10),
+				TypeID: []string{randType, randType, randType},
 			},
 		},
 		{
@@ -109,21 +149,56 @@ func TestCreateMonsterHandler(t *testing.T) {
 
 			// Create new monster
 			// Data body
-			var dataBody string
+			bodyRequest := new(bytes.Buffer)
+			writer := multipart.NewWriter(bodyRequest)
+
 			if tc.name != "failed_validation_error" {
-				dataBody = fmt.Sprintf(`{"name": "%s", "category_id": "%s", "description": "%s", "length": %.1f, "weight": %d, "hp": %d, "attack": %d, "defends": %d, "speed": %d, "image": "%s", "type_id": ["%s", "%s"]}`, tc.reqCreateMonster.Name, tc.reqCreateMonster.CategoryID, tc.reqCreateMonster.Description, tc.reqCreateMonster.Length, tc.reqCreateMonster.Weight, tc.reqCreateMonster.Hp, tc.reqCreateMonster.Attack, tc.reqCreateMonster.Defends, tc.reqCreateMonster.Speed, tc.reqCreateMonster.Image, randType, randType)
+				writer.WriteField("name", tc.reqCreateMonster.Name)
+				writer.WriteField("category_id", tc.reqCreateMonster.CategoryID)
+				writer.WriteField("description", tc.reqCreateMonster.Description)
+				writer.WriteField("length", strconv.FormatFloat(float64(tc.reqCreateMonster.Length), 'f', 6, 64))
+				writer.WriteField("weight", strconv.Itoa(int(tc.reqCreateMonster.Weight)))
+				writer.WriteField("hp", strconv.Itoa(int(tc.reqCreateMonster.Hp)))
+				writer.WriteField("attack", strconv.Itoa(int(tc.reqCreateMonster.Attack)))
+				writer.WriteField("defends", strconv.Itoa(int(tc.reqCreateMonster.Defends)))
+				writer.WriteField("speed", strconv.Itoa(int(tc.reqCreateMonster.Speed)))
+				writer.WriteField("type_id", randType)
+
+				// Read file from local
+				file, _ := os.Open("image.png")
+				defer file.Close()
+
+				part, err := writer.CreateFormFile("image", "image.png")
+
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				_ = CreateImage()
+				_, err = io.Copy(part, file)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				writer.Close()
 			} else {
-				var emptySlice []string
-				dataBody = fmt.Sprintf(`{"name": "%s", "category_id": "%s", "description": "%s", "length": %.1f, "weight": %d, "hp": %d, "attack": %d, "defends": %d, "speed": %d, "image": "%s", "type_id": %v}`, "", tc.reqCreateMonster.CategoryID, tc.reqCreateMonster.Description, tc.reqCreateMonster.Length, tc.reqCreateMonster.Weight, tc.reqCreateMonster.Hp, tc.reqCreateMonster.Attack, tc.reqCreateMonster.Defends, tc.reqCreateMonster.Speed, tc.reqCreateMonster.Image, emptySlice)
+				// Validation error field is empty
+				writer.WriteField("name", "")
+				writer.WriteField("category_id", "")
+				writer.WriteField("description", "")
+				writer.WriteField("length", "")
+				writer.WriteField("weight", "")
+				writer.WriteField("hp", "")
+				writer.WriteField("attack", "")
+				writer.WriteField("defends", "")
+				writer.WriteField("speed", "")
+				writer.Close()
 			}
 
-			// New reader
-			requestBody := strings.NewReader(dataBody)
-
 			// Test access categories
-			request := httptest.NewRequest(http.MethodPost, "http://localhost:3000/api/v1/monster", requestBody)
+			request := httptest.NewRequest(http.MethodPost, "http://localhost:3000/api/v1/monster", bodyRequest)
 			// Added header content type
-			request.Header.Add("Content-Type", "application/json")
+			request.Header.Set("Content-Type", writer.FormDataContentType())
 
 			// if tc.name same failed_unauthorized_as_guest dont set header
 			if tc.name != "failed_unauthorized_as_guest" {

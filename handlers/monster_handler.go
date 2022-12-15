@@ -2,7 +2,10 @@ package handlers
 
 import (
 	"fmt"
+	"mime/multipart"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/letenk/pokedex/models/domain"
@@ -16,6 +19,25 @@ type monsterHandler struct {
 
 func NewHandlerMonster(usecase usecase.MonsterUsecase) *monsterHandler {
 	return &monsterHandler{usecase}
+}
+
+const (
+	// Max file size : 2MB
+	maxPartSize = int64(5 * 1024 * 1024)
+)
+
+func validateUploadFiles(fileHeader *multipart.FileHeader) (bool, string) {
+	size := fileHeader.Size
+	extension := strings.Split(fileHeader.Filename, ".")
+
+	if size > maxPartSize {
+		return false, "Files cannot exceed 2MB"
+	}
+
+	if extension[1] != "jpeg" && extension[1] != "jpg" && extension[1] != "png" {
+		return false, "File must be format jpeg or png"
+	}
+	return true, "ok"
 }
 
 func (h *monsterHandler) Create(c *gin.Context) {
@@ -47,12 +69,9 @@ func (h *monsterHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	fmt.Println("DEBUG 1")
-	fmt.Println("DEBUG 1")
-	fmt.Println("DEBUG 1")
-	fmt.Println("DEBUG 1")
-	// Get image
-	file, err := c.FormFile("image")
+
+	// Get file image
+	file, fileHeader, err := c.Request.FormFile("image")
 	if err != nil {
 		errorMessage := gin.H{"errors": err}
 		response := web.JSONResponseWithData(
@@ -64,31 +83,28 @@ func (h *monsterHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	fmt.Println("DEBUG 2")
-	fmt.Println("DEBUG 2")
-	fmt.Println("DEBUG 2")
-	fmt.Println("DEBUG 2")
-	// Create path image name
-	path := fmt.Sprintf("images/%s-%s", currentUser.ID, file.Filename)
-	// Move file image to folder images
-	err = c.SaveUploadedFile(file, path)
-	if err != nil {
-		// errorMessage := gin.H{"errors": err}
-		response := web.JSONResponseWithoutData(
+
+	// Validate
+	valid, message := validateUploadFiles(fileHeader)
+	if !valid {
+		errorMessage := gin.H{"errors": message}
+		response := web.JSONResponseWithData(
 			http.StatusBadRequest,
 			"error",
 			"create monster failed",
-			// errorMessage,
+			errorMessage,
 		)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	fmt.Println("DEBUG 3")
-	fmt.Println("DEBUG 3")
-	fmt.Println("DEBUG 3")
-	fmt.Println("DEBUG 3")
+
+	// File name formate
+	now := time.Now()
+	nowRFC3339 := now.Format(time.RFC3339)
+	fileName := fmt.Sprintf(`%s-%v-%s`, currentUser.ID, nowRFC3339, fileHeader.Filename)
+
 	// Create new user
-	_, err = h.usecase.Create(c.Request.Context(), req, path)
+	_, err = h.usecase.Create(c.Request.Context(), req, file, fileName)
 	if err != nil {
 		errorMessage := gin.H{"errors": err}
 		response := web.JSONResponseWithData(
@@ -100,10 +116,7 @@ func (h *monsterHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	fmt.Println("DEBUG 4")
-	fmt.Println("DEBUG 4")
-	fmt.Println("DEBUG 4")
-	fmt.Println("DEBUG 4")
+
 	// Create format response
 	response := web.JSONResponseWithoutData(
 		http.StatusCreated,
