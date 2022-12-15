@@ -49,4 +49,8 @@ test_cover_nocache:
 run: 
 	go run main.go
 
+# Create table and seed sample data user, category, types
+run-migrate-seed: 
+	psql -d postgresql://root:secret@localhost:5432/pokedex -f scripts/db/dump.sql
+
 .PHONY: up down test test_nocache test_cover test_cover_nocache run

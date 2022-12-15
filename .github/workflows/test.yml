@@ -38,8 +38,29 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
 
+    - name: create env file
+      env:
+        GIN_MODE: ${{ secrets.GIN_MODE}}
+        DB_DRIVER: ${{ secrets.DB_DRIVER}}
+        DB_SOURCE: ${{ secrets.DB_SOURCE}}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        AWS_Region: ${{ secrets.AWS_Region }}
+        AWS_KEY_ID: ${{ secrets.AWS_KEY_ID }}
+        AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+        AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+      run: |
+        touch app.env
+        echo GIN_MODE=$GIN_MODE >> app.env
+        echo DB_DRIVER=$DB_DRIVER >> app.env
+        echo DB_SOURCE=$DB_SOURCE >> app.env
+        echo JWT_SECRET=$JWT_SECRET >> app.env
+        echo AWS_Region=$AWS_Region >> app.env
+        echo AWS_KEY_ID=$AWS_KEY_ID >> app.env
+        echo AWS_SECRET_KEY=$AWS_SECRET_KEY >> app.env
+        echo AWS_BUCKET_NAME=$AWS_BUCKET_NAME >> app.env
+
     - name: Create table and seed sample data user, category, types
-      run: psql -d postgresql://root:secret@localhost:5432/pokedex -f scripts/db/dump.sql
+      run: make run-migrate-seed 
 
     - name: Test
       run: make test
