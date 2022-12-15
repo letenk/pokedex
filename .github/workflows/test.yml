@@ -40,7 +40,6 @@ jobs:
 
     - name: create env file
       env:
-        GIN_MODE: ${{ secrets.GIN_MODE}}
         DB_DRIVER: ${{ secrets.DB_DRIVER}}
         DB_SOURCE: ${{ secrets.DB_SOURCE}}
         JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -50,7 +49,6 @@ jobs:
         AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
       run: |
         touch app.env
-        echo GIN_MODE=$GIN_MODE >> app.env
         echo DB_DRIVER=$DB_DRIVER >> app.env
         echo DB_SOURCE=$DB_SOURCE >> app.env
         echo JWT_SECRET=$JWT_SECRET >> app.env
