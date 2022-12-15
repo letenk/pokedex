@@ -53,4 +53,8 @@ run:
 run-migrate-seed: 
 	psql -d postgresql://root:secret@localhost:5432/pokedex -f scripts/db/dump.sql
 
+# Create table and seed sample data user, category, types for database test
+run-migrate-seed-test: 
+	psql -d postgresql://root:secret@localhost:5432/pokedex_test -f scripts/db/dump.sql
+
 .PHONY: up down test test_nocache test_cover test_cover_nocache run

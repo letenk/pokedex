@@ -60,7 +60,7 @@ jobs:
         echo AWS_BUCKET_NAME=$AWS_BUCKET_NAME >> app.env
 
     - name: Create table and seed sample data user, category, types
-      run: make run-migrate-seed 
+      run: make run-migrate-seed-test 
 
     - name: Test
       run: make test
