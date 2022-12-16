@@ -106,7 +106,7 @@ func (h *monsterHandler) Create(c *gin.Context) {
 	// Create new user
 	_, err = h.usecase.Create(c.Request.Context(), req, file, fileName)
 	if err != nil {
-		errorMessage := gin.H{"errors": err}
+		errorMessage := gin.H{"errors": err.Error()}
 		response := web.JSONResponseWithData(
 			http.StatusBadRequest,
 			"error",
@@ -143,12 +143,14 @@ func (h *monsterHandler) FindAll(c *gin.Context) {
 	// Find all montser
 	monsters, err := h.usecase.FindAll(c.Request.Context(), queryParameter)
 	if err != nil {
-		response := web.JSONResponseWithoutData(
-			http.StatusInternalServerError,
+		errorMessage := gin.H{"errors": err.Error()}
+		response := web.JSONResponseWithData(
+			http.StatusBadRequest,
 			"error",
-			"internal server error",
+			"bad request",
+			errorMessage,
 		)
-		c.JSON(http.StatusInternalServerError, response)
+		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 

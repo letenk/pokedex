@@ -49,42 +49,94 @@ func RandomCreateMonster(t *testing.T) (domain.Monster, []string) {
 		randCategories = append(randCategories, randCategory)
 	}
 
-	// Sample data
-	monster := domain.Monster{
-		Name:        util.RandomString(10),
-		CategoryID:  randCategories[0],
-		Description: util.RandomString(20),
-		Length:      54.3,
-		Weight:      uint16(util.RandomInt(50, 500)),
-		Hp:          uint16(util.RandomInt(50, 500)),
-		Attack:      uint16(util.RandomInt(50, 500)),
-		Defends:     uint16(util.RandomInt(50, 500)),
-		Speed:       uint16(util.RandomInt(50, 500)),
-		Image:       util.RandomString(10),
-		TypeID:      randTypes,
+	// Test cases
+	testCases := []struct {
+		name string
+		data domain.Monster
+	}{
+		{
+			name: "success_create_monster",
+			data: domain.Monster{
+				Name:        util.RandomString(10),
+				CategoryID:  randCategories[0],
+				Description: util.RandomString(20),
+				Length:      54.3,
+				Weight:      uint16(util.RandomInt(50, 500)),
+				Hp:          uint16(util.RandomInt(50, 500)),
+				Attack:      uint16(util.RandomInt(50, 500)),
+				Defends:     uint16(util.RandomInt(50, 500)),
+				Speed:       uint16(util.RandomInt(50, 500)),
+				Image:       util.RandomString(10),
+				TypeID:      randTypes,
+			},
+		},
+		{
+			name: "failed_create_monster_invalid_category_id",
+			data: domain.Monster{
+				Name:        util.RandomString(10),
+				CategoryID:  "4562482c-7acd-4daf-901f-d95c7a7afd65",
+				Description: util.RandomString(20),
+				Length:      54.3,
+				Weight:      uint16(util.RandomInt(50, 500)),
+				Hp:          uint16(util.RandomInt(50, 500)),
+				Attack:      uint16(util.RandomInt(50, 500)),
+				Defends:     uint16(util.RandomInt(50, 500)),
+				Speed:       uint16(util.RandomInt(50, 500)),
+				Image:       util.RandomString(10),
+				TypeID:      randTypes,
+			},
+		},
+		{
+			name: "failed_create_monster_invalid_types_id",
+			data: domain.Monster{
+				Name:        util.RandomString(10),
+				CategoryID:  randCategories[0],
+				Description: util.RandomString(20),
+				Length:      54.3,
+				Weight:      uint16(util.RandomInt(50, 500)),
+				Hp:          uint16(util.RandomInt(50, 500)),
+				Attack:      uint16(util.RandomInt(50, 500)),
+				Defends:     uint16(util.RandomInt(50, 500)),
+				Speed:       uint16(util.RandomInt(50, 500)),
+				Image:       util.RandomString(10),
+				TypeID:      []string{"558160ef-e8f5-4951-b5f4-feeb0815b510", "d5a8d4bb-eb0a-44a4-ae46-eb2af2b2002d"},
+			},
+		},
 	}
 
-	// Create
-	newMonster, err := repositoryMonster.Create(context.Background(), monster)
-	require.NoError(t, err)
+	var monster domain.Monster
+	// Test
+	for i := range testCases {
+		tc := testCases[i]
 
-	require.NotEmpty(t, newMonster.ID)
-	require.NotEmpty(t, newMonster.CreatedAt)
-	require.NotEmpty(t, newMonster.UpdatedAt)
+		// Create
+		newMonster, err := repositoryMonster.Create(context.Background(), tc.data)
+		if tc.name != "success_create_monster" {
+			require.Error(t, err)
+			require.Equal(t, "invalid category id or type id, please check valid id in each of their list", err.Error())
+		} else {
+			require.NoError(t, err)
+			require.NotEmpty(t, newMonster.ID)
+			require.NotEmpty(t, newMonster.CreatedAt)
+			require.NotEmpty(t, newMonster.UpdatedAt)
 
-	require.Equal(t, monster.Name, newMonster.Name)
-	require.Equal(t, monster.CategoryID, newMonster.CategoryID)
-	require.Equal(t, monster.Description, newMonster.Description)
-	require.Equal(t, monster.Length, newMonster.Length)
-	require.Equal(t, monster.Weight, newMonster.Weight)
-	require.Equal(t, monster.Hp, newMonster.Hp)
-	require.Equal(t, monster.Attack, newMonster.Attack)
-	require.Equal(t, monster.Defends, newMonster.Defends)
-	require.Equal(t, monster.Speed, newMonster.Speed)
-	require.Equal(t, monster.Image, newMonster.Image)
+			require.Equal(t, tc.data.Name, newMonster.Name)
+			require.Equal(t, tc.data.CategoryID, newMonster.CategoryID)
+			require.Equal(t, tc.data.Description, newMonster.Description)
+			require.Equal(t, tc.data.Length, newMonster.Length)
+			require.Equal(t, tc.data.Weight, newMonster.Weight)
+			require.Equal(t, tc.data.Hp, newMonster.Hp)
+			require.Equal(t, tc.data.Attack, newMonster.Attack)
+			require.Equal(t, tc.data.Defends, newMonster.Defends)
+			require.Equal(t, tc.data.Speed, newMonster.Speed)
+			require.Equal(t, tc.data.Image, newMonster.Image)
+
+			monster = newMonster
+		}
+	}
 
 	// Return result to use other test
-	return newMonster, randTypes
+	return monster, randTypes
 }
 
 func TestCreateMonsterRepository(t *testing.T) {
