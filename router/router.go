@@ -61,6 +61,8 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 
 	// Group endpoint monster
 	monster := v1.Group("/monster")
+	// Find all monster
+	monster.GET("", handlerMonster.FindAll)
 	// Create monster
 	monster.POST("", middleware.AuthMiddleware(usecaseUser), handlerMonster.Create)
 

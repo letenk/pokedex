@@ -18,6 +18,7 @@ import (
 
 type MonsterUsecase interface {
 	Create(ctx context.Context, monster web.MonsterCreateRequest, file multipart.File, fileName string) (domain.Monster, error)
+	FindAll(ctx context.Context, reqQuery web.MonsterQueryRequest) ([]domain.Monster, error)
 }
 
 type monsterUsecase struct {
@@ -101,4 +102,14 @@ func (u *monsterUsecase) Create(ctx context.Context, req web.MonsterCreateReques
 	}
 
 	return monster, nil
+}
+
+func (u *monsterUsecase) FindAll(ctx context.Context, reqQuery web.MonsterQueryRequest) ([]domain.Monster, error) {
+	// Find all
+	monsters, err := u.repository.FindAll(ctx, reqQuery)
+	if err != nil {
+		return monsters, err
+	}
+
+	return monsters, nil
 }

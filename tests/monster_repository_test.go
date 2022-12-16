@@ -2,9 +2,11 @@ package tests
 
 import (
 	"context"
+	"strconv"
 	"testing"
 
 	"github.com/letenk/pokedex/models/domain"
+	"github.com/letenk/pokedex/models/web"
 	"github.com/letenk/pokedex/repository"
 	"github.com/letenk/pokedex/util"
 	"github.com/stretchr/testify/require"
@@ -34,17 +36,23 @@ func RandomCategoryAndType() (string, string) {
 	return randCategory, randType
 }
 
-func TestCreateMonsterRepository(t *testing.T) {
+func RandomCreateMonster(t *testing.T) (domain.Monster, []string) {
 	t.Parallel()
 	repositoryMonster := repository.NewMonsterRespository(ConnTest)
 
+	var randTypes []string
+	var randCategories []string
 	// Get data random category and type
-	randCategory, randType := RandomCategoryAndType()
+	for i := 0; i < 3; i++ {
+		randCategory, randType := RandomCategoryAndType()
+		randTypes = append(randTypes, randType)
+		randCategories = append(randCategories, randCategory)
+	}
 
 	// Sample data
 	monster := domain.Monster{
 		Name:        util.RandomString(10),
-		CategoryID:  randCategory,
+		CategoryID:  randCategories[0],
 		Description: util.RandomString(20),
 		Length:      54.3,
 		Weight:      uint16(util.RandomInt(50, 500)),
@@ -53,7 +61,7 @@ func TestCreateMonsterRepository(t *testing.T) {
 		Defends:     uint16(util.RandomInt(50, 500)),
 		Speed:       uint16(util.RandomInt(50, 500)),
 		Image:       util.RandomString(10),
-		TypeID:      []string{randType, randType, randType},
+		TypeID:      randTypes,
 	}
 
 	// Create
@@ -74,4 +82,97 @@ func TestCreateMonsterRepository(t *testing.T) {
 	require.Equal(t, monster.Defends, newMonster.Defends)
 	require.Equal(t, monster.Speed, newMonster.Speed)
 	require.Equal(t, monster.Image, newMonster.Image)
+
+	// Return result to use other test
+	return newMonster, randTypes
+}
+
+func TestCreateMonsterRepository(t *testing.T) {
+	RandomCreateMonster(t)
+}
+
+func TestFindAllMonsterRepository(t *testing.T) {
+	// Create random monsters
+	newMonster, randTypes := RandomCreateMonster(t)
+
+	repositoryMonster := repository.NewMonsterRespository(ConnTest)
+	ctx := context.Background()
+
+	testCases := []struct {
+		name           string
+		queryParameter web.MonsterQueryRequest
+	}{
+		{
+			name:           "find_all_monsters_without_query_parameter",
+			queryParameter: web.MonsterQueryRequest{},
+		},
+		{
+			name: "find_all_monsters_with_query_parameter_name",
+			queryParameter: web.MonsterQueryRequest{
+				Name: newMonster.Name,
+			},
+		},
+		{
+			name: "find_all_monsters_with_query_parameter_catched_false",
+			queryParameter: web.MonsterQueryRequest{
+				Catched: "false",
+			},
+		},
+		{
+			name: "find_all_monsters_with_query_parameter_sort_by_name",
+			queryParameter: web.MonsterQueryRequest{
+				Sort: "name",
+			},
+		},
+		{
+			name: "find_all_monsters_with_query_parameter_sort_by_id",
+			queryParameter: web.MonsterQueryRequest{
+				Sort: "id",
+			},
+		},
+		{
+			name: "find_all_monsters_with_query_parameter_order_by_asc",
+			queryParameter: web.MonsterQueryRequest{
+				Sort:  "name",
+				Order: "asc",
+			},
+		},
+		{
+			name: "find_all_monsters_with_query_parameter_order_by_desc",
+			queryParameter: web.MonsterQueryRequest{
+				Sort:  "name",
+				Order: "desc",
+			},
+		},
+		{
+			name: "find_all_monsters_with_query_parameter_types",
+			queryParameter: web.MonsterQueryRequest{
+				Types: randTypes,
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			// Find All
+			monsters, err := repositoryMonster.FindAll(ctx, tc.queryParameter)
+			require.NoError(t, err)
+
+			for _, monster := range monsters {
+				require.NotEmpty(t, monster.ID)
+				require.NotEmpty(t, monster.Name)
+				require.NotEmpty(t, monster.Category.Name)
+				require.NotEmpty(t, strconv.FormatBool(monster.Catched))
+				require.NotEmpty(t, monster.Image)
+
+				require.NotEqual(t, 0, len(monster.Types))
+				for i := 0; i < len(monster.Types); i++ {
+					require.NotEmpty(t, monster.Types[i].Name)
+				}
+			}
+		})
+	}
 }

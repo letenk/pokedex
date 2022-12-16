@@ -19,6 +19,7 @@ type Monster struct {
 	Image       string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	TypeID      []string `gorm:"-"` // Ignore as field column
-	Type        []*Type  `gorm:"many2many:monster_type"`
+	TypeID      []string `gorm:"-"`                       // Ignore as field column
+	Types       []Type   `gorm:"many2many:monster_types"` // Relation many to many to category
+	Category    Category // Relation one to many to category
 }
