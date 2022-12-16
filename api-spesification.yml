@@ -210,8 +210,14 @@ paths:
           name: sort
           schema:
             type: string
-            enum: [name, id, asc, desc]
-          description: Sorting data
+            enum: [name, id]
+          description: Sorting data by name or id
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+          description: Order by ascending or descending
       responses:
         200:
           description: Find all list of monsters
