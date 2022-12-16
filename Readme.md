@@ -26,11 +26,12 @@
     - [x] Database Schema
 - [ ] Architecture diagram flow CRUD and Login
 - [ ] CRUD
-    - [ ] Get all of list monsters
-        - [ ] Search by name
-        - [ ] Filter by type
-        - [ ] Filter by type catched or uncatched (options)
-        - [ ] Sort by name, id, ascending or descending
+    - [x] Get all of list monsters
+        - [x] Search by name
+        - [x] Filter by type
+        - [x] Filter by type catched or uncatched (options)
+        - [x] Sort by name, id
+        - [x] Order by ascending or descending
     - [ ] Get profile detail monster
     - [x] Add (admin only)
         - [x] Upload image to aws s3
