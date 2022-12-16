@@ -208,6 +208,133 @@ func TestCreateMonsterHandler(t *testing.T) {
 				require.NotEqual(t, 0, len((responseBody["data"].(map[string]interface{})["errors"].([]interface{}))))
 			}
 		})
+	}
+}
 
+func TestFindAllMonsterHandler(t *testing.T) {
+	// Create random monsters
+	newMonster, randTypes := RandomCreateMonster(t)
+
+	testCases := []struct {
+		name           string
+		queryParameter web.MonsterQueryRequest
+	}{
+		{
+			name:           "find_all_monsters_without_query_parameter",
+			queryParameter: web.MonsterQueryRequest{},
+		},
+		{
+			name: "find_all_monsters_with_query_parameter_name",
+			queryParameter: web.MonsterQueryRequest{
+				Name: newMonster.Name,
+			},
+		},
+		{
+			name: "find_all_monsters_with_query_parameter_catched_false",
+			queryParameter: web.MonsterQueryRequest{
+				Catched: "false",
+			},
+		},
+		{
+			name: "find_all_monsters_with_query_parameter_sort_by_name",
+			queryParameter: web.MonsterQueryRequest{
+				Sort: "name",
+			},
+		},
+		{
+			name: "find_all_monsters_with_query_parameter_sort_by_id",
+			queryParameter: web.MonsterQueryRequest{
+				Sort: "id",
+			},
+		},
+		{
+			name: "find_all_monsters_with_query_parameter_order_by_desc",
+			queryParameter: web.MonsterQueryRequest{
+				Sort:  "name",
+				Order: "desc",
+			},
+		},
+		{
+			name: "find_all_monsters_with_query_parameter_types",
+			queryParameter: web.MonsterQueryRequest{
+				Types: randTypes,
+			},
+		},
+		{
+			name: "find_all_monsters_with_query_parameter_types",
+			queryParameter: web.MonsterQueryRequest{
+				Types: randTypes,
+			},
+		},
+	}
+
+	// Test
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Test access categories
+			var urlTarget string
+			if tc.name == "find_all_monsters_with_query_parameter_name" {
+				urlTarget = fmt.Sprintf("http://localhost:3000/api/v1/monster?name=%s", tc.queryParameter.Name)
+			} else if tc.name == "find_all_monsters_with_query_parameter_catched_false" {
+				urlTarget = fmt.Sprintf("http://localhost:3000/api/v1/monster?catched=%s", tc.queryParameter.Catched)
+			} else if tc.name == "find_all_monsters_with_query_parameter_sort_by_name" || tc.name == "find_all_monsters_with_query_parameter_sort_by_id" {
+				urlTarget = fmt.Sprintf("http://localhost:3000/api/v1/monster?sort=%s", tc.queryParameter.Sort)
+			} else if tc.name == "find_all_monsters_with_query_parameter_order_by_asc" || tc.name == "find_all_monsters_with_query_parameter_order_by_desc" {
+				urlTarget = fmt.Sprintf("http://localhost:3000/api/v1/monster?sort=%s&order=%s", tc.queryParameter.Sort, tc.queryParameter.Order)
+			} else if tc.name == "find_all_monsters_with_query_parameter_types" {
+				urlTarget = fmt.Sprintf("http://localhost:3000/api/v1/monster?types=%s&types=%s&types=%s", tc.queryParameter.Types[0], tc.queryParameter.Types[1], tc.queryParameter.Types[2])
+			} else {
+				urlTarget = fmt.Sprint("http://localhost:3000/api/v1/monster")
+			}
+
+			request := httptest.NewRequest(http.MethodGet, urlTarget, nil)
+			// Added header content type
+			request.Header.Add("Content-Type", "application/json")
+
+			// Create new recorder
+			recorder := httptest.NewRecorder()
+
+			// Run http test
+			RouteTest.ServeHTTP(recorder, request)
+
+			// Get response
+			response := recorder.Result()
+
+			// Read all response
+			body, _ := io.ReadAll(response.Body)
+			var responseBody map[string]interface{}
+			json.Unmarshal(body, &responseBody)
+
+			require.Equal(t, 200, response.StatusCode)
+			require.Equal(t, 200, int(responseBody["code"].(float64)))
+			require.Equal(t, "success", responseBody["status"])
+			require.Equal(t, "List of monsters", responseBody["message"])
+			require.NotEmpty(t, responseBody["data"])
+
+			var contextData = responseBody["data"].([]any)
+			require.NotEqual(t, 0, len(contextData))
+
+			// Check each field is not empty
+			for _, data := range contextData {
+				list := data.(map[string]any)
+				require.NotEmpty(t, list["id"])
+				require.NotEmpty(t, list["name"])
+				require.NotEmpty(t, list["category_name"])
+				require.NotEmpty(t, list["image"])
+
+				strCatched := strconv.FormatBool(list["catched"].(bool))
+				require.NotEmpty(t, strCatched)
+
+				require.NotEqual(t, 0, len(list["types"].([]any)))
+				for _, ty := range list["types"].([]any) {
+					listType := ty.(map[string]any)
+					require.NotEmpty(t, listType["name"])
+				}
+			}
+		})
 	}
 }

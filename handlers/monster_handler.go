@@ -125,3 +125,40 @@ func (h *monsterHandler) Create(c *gin.Context) {
 	)
 	c.JSON(http.StatusCreated, response)
 }
+
+func (h *monsterHandler) FindAll(c *gin.Context) {
+	// Get query
+	var queryParameter web.MonsterQueryRequest
+	err := c.Bind(&queryParameter)
+	if err != nil {
+		response := web.JSONResponseWithoutData(
+			http.StatusInternalServerError,
+			"error",
+			"internal server error",
+		)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Find all montser
+	monsters, err := h.usecase.FindAll(c.Request.Context(), queryParameter)
+	if err != nil {
+		response := web.JSONResponseWithoutData(
+			http.StatusInternalServerError,
+			"error",
+			"internal server error",
+		)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Create format response
+	response := web.JSONResponseWithData(
+		http.StatusOK,
+		"success",
+		"List of monsters",
+		web.FormatMonsterResponseList(monsters),
+	)
+
+	c.JSON(http.StatusOK, response)
+}
