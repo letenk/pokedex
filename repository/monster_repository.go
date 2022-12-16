@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/jackc/pgconn"
 	"github.com/letenk/pokedex/models/domain"
 	"github.com/letenk/pokedex/models/web"
 	"gorm.io/gorm"
@@ -31,11 +32,17 @@ func (r *monsterRespository) Create(ctx context.Context, monster domain.Monster)
 	// Cancel context after all process ends
 	defer cancel()
 
-	r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 
 		// Create monster
 		err := tx.WithContext(ctx).Create(&monster).Error
 		if err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) {
+				if pgErr.Code == "23503" {
+					return errors.New("invalid category id or type id, please check valid id in each of their list")
+				}
+			}
 			return err
 		}
 
@@ -46,11 +53,21 @@ func (r *monsterRespository) Create(ctx context.Context, monster domain.Monster)
 			monsterTag.TypeID = typeID
 			err = tx.WithContext(ctx).Create(&monsterTag).Error
 			if err != nil {
+				var pgErr *pgconn.PgError
+				if errors.As(err, &pgErr) {
+					if pgErr.Code == "23503" {
+						return errors.New("invalid category id or type id, please check valid id in each of their list")
+					}
+				}
 				return err
 			}
 		}
 		return nil
 	})
+
+	if err != nil {
+		return monster, err
+	}
 
 	return monster, nil
 }
@@ -66,7 +83,7 @@ func (r *monsterRespository) FindAll(ctx context.Context, reqQuery web.MonsterQu
 	db := r.db.WithContext(ctx).Model(&domain.Monster{})
 
 	if reqQuery.Name != "" {
-		db = db.Where("monsters.name LIKE ?", "%"+reqQuery.Name+"%")
+		db = db.Where("lower(monsters.name) LIKE lower(?)", "%"+reqQuery.Name+"%")
 	}
 
 	if reqQuery.Catched != "" {

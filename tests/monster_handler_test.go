@@ -19,8 +19,14 @@ import (
 )
 
 func TestCreateMonsterHandler(t *testing.T) {
+	var randTypes []string
+	var randCategories []string
 	// Get data random category and type
-	randCategory, randType := RandomCategoryAndType()
+	for i := 0; i < 3; i++ {
+		randCategory, randType := RandomCategoryAndType()
+		randTypes = append(randTypes, randType)
+		randCategories = append(randCategories, randCategory)
+	}
 
 	// Test Cases
 	testCases := []struct {
@@ -38,7 +44,7 @@ func TestCreateMonsterHandler(t *testing.T) {
 
 			reqCreateMonster: web.MonsterCreateRequest{
 				Name:        util.RandomString(10),
-				CategoryID:  randCategory,
+				CategoryID:  randCategories[0],
 				Description: util.RandomString(20),
 				Length:      54.3,
 				Weight:      uint16(util.RandomInt(50, 500)),
@@ -46,8 +52,7 @@ func TestCreateMonsterHandler(t *testing.T) {
 				Attack:      uint16(util.RandomInt(50, 500)),
 				Defends:     uint16(util.RandomInt(50, 500)),
 				Speed:       uint16(util.RandomInt(50, 500)),
-				// Image:       util.RandomString(10),
-				TypeID: []string{randType, randType, randType},
+				TypeID:      randTypes,
 			},
 		},
 		{
@@ -59,7 +64,7 @@ func TestCreateMonsterHandler(t *testing.T) {
 
 			reqCreateMonster: web.MonsterCreateRequest{
 				Name:        util.RandomString(10),
-				CategoryID:  randCategory,
+				CategoryID:  randCategories[0],
 				Description: util.RandomString(20),
 				Length:      54.3,
 				Weight:      uint16(util.RandomInt(50, 500)),
@@ -67,8 +72,7 @@ func TestCreateMonsterHandler(t *testing.T) {
 				Attack:      uint16(util.RandomInt(50, 500)),
 				Defends:     uint16(util.RandomInt(50, 500)),
 				Speed:       uint16(util.RandomInt(50, 500)),
-				// Image:       util.RandomString(10),
-				TypeID: []string{randType, randType, randType},
+				TypeID:      randTypes,
 			},
 		},
 		{
@@ -77,7 +81,7 @@ func TestCreateMonsterHandler(t *testing.T) {
 
 			reqCreateMonster: web.MonsterCreateRequest{
 				Name:        util.RandomString(10),
-				CategoryID:  randCategory,
+				CategoryID:  randCategories[0],
 				Description: util.RandomString(20),
 				Length:      54.3,
 				Weight:      uint16(util.RandomInt(50, 500)),
@@ -85,8 +89,47 @@ func TestCreateMonsterHandler(t *testing.T) {
 				Attack:      uint16(util.RandomInt(50, 500)),
 				Defends:     uint16(util.RandomInt(50, 500)),
 				Speed:       uint16(util.RandomInt(50, 500)),
-				// Image:       util.RandomString(10),
-				TypeID: []string{randType, randType, randType},
+				TypeID:      randTypes,
+			},
+		},
+		{
+			name: "failed_invalid_category_id",
+			reqLogin: web.UserLoginRequest{
+				Username: "admin",
+				Password: "password",
+			},
+
+			reqCreateMonster: web.MonsterCreateRequest{
+				Name:        util.RandomString(10),
+				CategoryID:  "4562482c-7acd-4daf-901f-d95c7a7afd65",
+				Description: util.RandomString(20),
+				Length:      54.3,
+				Weight:      uint16(util.RandomInt(50, 500)),
+				Hp:          uint16(util.RandomInt(50, 500)),
+				Attack:      uint16(util.RandomInt(50, 500)),
+				Defends:     uint16(util.RandomInt(50, 500)),
+				Speed:       uint16(util.RandomInt(50, 500)),
+				TypeID:      randTypes,
+			},
+		},
+		{
+			name: "failed_invalid_type_id",
+			reqLogin: web.UserLoginRequest{
+				Username: "admin",
+				Password: "password",
+			},
+
+			reqCreateMonster: web.MonsterCreateRequest{
+				Name:        util.RandomString(10),
+				CategoryID:  randCategories[0],
+				Description: util.RandomString(20),
+				Length:      54.3,
+				Weight:      uint16(util.RandomInt(50, 500)),
+				Hp:          uint16(util.RandomInt(50, 500)),
+				Attack:      uint16(util.RandomInt(50, 500)),
+				Defends:     uint16(util.RandomInt(50, 500)),
+				Speed:       uint16(util.RandomInt(50, 500)),
+				TypeID:      []string{"558160ef-e8f5-4951-b5f4-feeb0815b511", "d5a8d4bb-eb0a-44a4-ae46-eb2af2b2002c"},
 			},
 		},
 		{
@@ -126,7 +169,8 @@ func TestCreateMonsterHandler(t *testing.T) {
 				writer.WriteField("attack", strconv.Itoa(int(tc.reqCreateMonster.Attack)))
 				writer.WriteField("defends", strconv.Itoa(int(tc.reqCreateMonster.Defends)))
 				writer.WriteField("speed", strconv.Itoa(int(tc.reqCreateMonster.Speed)))
-				writer.WriteField("type_id", randType)
+				writer.WriteField("type_id", tc.reqCreateMonster.TypeID[0])
+				writer.WriteField("type_id", tc.reqCreateMonster.TypeID[1])
 
 				// Read file from local
 				file, _ := os.Open("file_sample/image.png")
@@ -199,6 +243,18 @@ func TestCreateMonsterHandler(t *testing.T) {
 				require.Equal(t, 401, int(responseBody["code"].(float64)))
 				require.Equal(t, "error", responseBody["status"])
 				require.Equal(t, "unauthorized", responseBody["message"])
+			} else if tc.name == "failed_invalid_category_id" {
+				require.Equal(t, 400, response.StatusCode)
+				require.Equal(t, 400, int(responseBody["code"].(float64)))
+				require.Equal(t, "error", responseBody["status"])
+				require.Equal(t, "create monster failed", responseBody["message"])
+				require.Equal(t, "invalid category id or type id, please check valid id in each of their list", responseBody["data"].(map[string]interface{})["errors"])
+			} else if tc.name == "failed_invalid_type_id" {
+				require.Equal(t, 400, response.StatusCode)
+				require.Equal(t, 400, int(responseBody["code"].(float64)))
+				require.Equal(t, "error", responseBody["status"])
+				require.Equal(t, "create monster failed", responseBody["message"])
+				require.Equal(t, "invalid category id or type id, please check valid id in each of their list", responseBody["data"].(map[string]interface{})["errors"])
 			} else {
 				// If validation error
 				require.Equal(t, 400, response.StatusCode)
