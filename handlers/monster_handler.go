@@ -164,3 +164,41 @@ func (h *monsterHandler) FindAll(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+func (h *monsterHandler) FindByID(c *gin.Context) {
+	var monsterID web.MosterURI
+	err := c.ShouldBindUri(&monsterID)
+	if err != nil {
+		response := web.JSONResponseWithoutData(
+			http.StatusInternalServerError,
+			"error",
+			"internal server error",
+		)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Find by id monster
+	monsters, err := h.usecase.FindByID(c.Request.Context(), monsterID.ID)
+	if err != nil {
+		errorMessage := gin.H{"errors": err.Error()}
+		response := web.JSONResponseWithData(
+			http.StatusBadRequest,
+			"error",
+			"bad request",
+			errorMessage,
+		)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Create format response
+	response := web.JSONResponseWithData(
+		http.StatusOK,
+		"success",
+		"profile detail of monsters",
+		web.FormatMonsterResponseDetail(monsters),
+	)
+
+	c.JSON(http.StatusOK, response)
+}

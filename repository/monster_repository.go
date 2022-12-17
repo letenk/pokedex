@@ -16,6 +16,7 @@ import (
 type MonsterRepository interface {
 	Create(ctx context.Context, monster domain.Monster) (domain.Monster, error)
 	FindAll(ctx context.Context, reqQuery web.MonsterQueryRequest) ([]domain.Monster, error)
+	FindByID(ctx context.Context, ID string) (domain.Monster, error)
 }
 
 type monsterRespository struct {
@@ -124,4 +125,26 @@ func (r *monsterRespository) FindAll(ctx context.Context, reqQuery web.MonsterQu
 		return monsters, nil
 	}
 
+}
+
+func (r *monsterRespository) FindByID(ctx context.Context, ID string) (domain.Monster, error) {
+	// Create a context in order to disconnect
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	// Cancel context after all process ends
+	defer cancel()
+
+	var monster domain.Monster
+	err := r.db.WithContext(ctx).Where("id = ?", ID).Preload("Category").Preload("Types").Find(&monster).Error
+	if monster.ID == "" {
+		var err error
+		errMessage := fmt.Sprintf("monster with id %s not found", ID)
+		err = errors.New(errMessage)
+		return monster, err
+	}
+
+	if err != nil {
+		return monster, err
+	}
+
+	return monster, nil
 }
