@@ -2,6 +2,8 @@ package tests
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -110,11 +112,12 @@ func RandomCreateMonster(t *testing.T) (domain.Monster, []string) {
 		tc := testCases[i]
 
 		// Create
-		newMonster, err := repositoryMonster.Create(context.Background(), tc.data)
 		if tc.name != "success_create_monster" {
+			_, err := repositoryMonster.Create(context.Background(), tc.data)
 			require.Error(t, err)
 			require.Equal(t, "invalid category id or type id, please check valid id in each of their list", err.Error())
 		} else {
+			newMonster, err := repositoryMonster.Create(context.Background(), tc.data)
 			require.NoError(t, err)
 			require.NotEmpty(t, newMonster.ID)
 			require.NotEmpty(t, newMonster.CreatedAt)
@@ -134,7 +137,6 @@ func RandomCreateMonster(t *testing.T) (domain.Monster, []string) {
 			monster = newMonster
 		}
 	}
-
 	// Return result to use other test
 	return monster, randTypes
 }
@@ -224,6 +226,66 @@ func TestFindAllMonsterRepository(t *testing.T) {
 				for i := 0; i < len(monster.Types); i++ {
 					require.NotEmpty(t, monster.Types[i].Name)
 				}
+			}
+		})
+	}
+}
+
+func TestFindByIDMonsterRepository(t *testing.T) {
+	// Create random monsters
+	newMonster, _ := RandomCreateMonster(t)
+	repositoryMonster := repository.NewMonsterRespository(ConnTest)
+	ctx := context.Background()
+
+	testCases := []struct {
+		name      string
+		idMonster string
+	}{
+		{
+			name:      "find_by_id_monster_success",
+			idMonster: newMonster.ID,
+		},
+		{
+			name:      "find_by_id_monster_failed",
+			idMonster: "368bd987-dec6-4405-a036-bc1232db21b2",
+		},
+	}
+
+	// Test
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			// Find by id
+			monster, err := repositoryMonster.FindByID(ctx, tc.idMonster)
+
+			if tc.name == "find_by_id_monster_success" {
+				require.NoError(t, err)
+
+				require.NotEmpty(t, monster.Category.Name)
+
+				require.Equal(t, newMonster.ID, monster.ID)
+				require.Equal(t, newMonster.Name, monster.Name)
+				require.Equal(t, newMonster.Description, monster.Description)
+				require.Equal(t, newMonster.Length, monster.Length)
+				require.Equal(t, newMonster.Weight, monster.Weight)
+				require.Equal(t, newMonster.Hp, monster.Hp)
+				require.Equal(t, newMonster.Attack, monster.Attack)
+				require.Equal(t, newMonster.Defends, monster.Defends)
+				require.Equal(t, newMonster.Speed, monster.Speed)
+				require.Equal(t, newMonster.Catched, monster.Catched)
+				require.Equal(t, newMonster.Image, monster.Image)
+
+				for _, ty := range monster.Types {
+					require.NotEmpty(t, ty.Name)
+				}
+			} else {
+				require.Error(t, err)
+				var errTest error
+				errMessage := fmt.Sprintf("monster with id %s not found", tc.idMonster)
+				errTest = errors.New(errMessage)
+				require.Equal(t, errTest, err)
 			}
 		})
 	}

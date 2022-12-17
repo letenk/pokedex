@@ -32,7 +32,7 @@
         - [x] Filter by type catched or uncatched (options)
         - [x] Sort by name, id
         - [x] Order by ascending or descending
-    - [ ] Get profile detail monster by id
+    - [x] Get profile detail monster by id
     - [x] Add (admin only)
         - [x] Upload image to aws s3
     - [ ] Update (admin only)

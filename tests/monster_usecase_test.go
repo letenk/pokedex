@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"mime/multipart"
 	"os"
@@ -209,6 +210,67 @@ func TestFindAllMonsterUsecase(t *testing.T) {
 				for i := 0; i < len(monster.Types); i++ {
 					require.NotEmpty(t, monster.Types[i].Name)
 				}
+			}
+		})
+	}
+}
+
+func TestFindByIDMonsterUsecase(t *testing.T) {
+	// Create random monsters
+	newMonster, _ := RandomCreateMonster(t)
+	repositoryMonster := repository.NewMonsterRespository(ConnTest)
+	usecaseMonster := usecase.NewUsecaseMonster(repositoryMonster)
+	ctx := context.Background()
+
+	testCases := []struct {
+		name      string
+		idMonster string
+	}{
+		{
+			name:      "find_by_id_monster_success",
+			idMonster: newMonster.ID,
+		},
+		{
+			name:      "find_by_id_monster_failed",
+			idMonster: "368bd987-dec6-4405-a036-bc1232db21b2",
+		},
+	}
+
+	// Test
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			// Find by id
+			monster, err := usecaseMonster.FindByID(ctx, tc.idMonster)
+
+			if tc.name == "find_by_id_monster_success" {
+				require.NoError(t, err)
+
+				require.NotEmpty(t, monster.Category.Name)
+
+				require.Equal(t, newMonster.ID, monster.ID)
+				require.Equal(t, newMonster.Name, monster.Name)
+				require.Equal(t, newMonster.Description, monster.Description)
+				require.Equal(t, newMonster.Length, monster.Length)
+				require.Equal(t, newMonster.Weight, monster.Weight)
+				require.Equal(t, newMonster.Hp, monster.Hp)
+				require.Equal(t, newMonster.Attack, monster.Attack)
+				require.Equal(t, newMonster.Defends, monster.Defends)
+				require.Equal(t, newMonster.Speed, monster.Speed)
+				require.Equal(t, newMonster.Catched, monster.Catched)
+				require.Equal(t, newMonster.Image, monster.Image)
+
+				for _, ty := range monster.Types {
+					require.NotEmpty(t, ty.Name)
+				}
+			} else {
+				require.Error(t, err)
+				var errTest error
+				errMessage := fmt.Sprintf("monster with id %s not found", tc.idMonster)
+				errTest = errors.New(errMessage)
+				require.Equal(t, errTest, err)
 			}
 		})
 	}

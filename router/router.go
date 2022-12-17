@@ -63,6 +63,8 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	monster := v1.Group("/monster")
 	// Find all monster
 	monster.GET("", handlerMonster.FindAll)
+	// Find by id monster
+	monster.GET("/:id", handlerMonster.FindByID)
 	// Create monster
 	monster.POST("", middleware.AuthMiddleware(usecaseUser), handlerMonster.Create)
 

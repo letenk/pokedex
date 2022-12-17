@@ -394,3 +394,87 @@ func TestFindAllMonsterHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestFindByIDMonsterHandler(t *testing.T) {
+	// Create random monsters
+	newMonster, _ := RandomCreateMonster(t)
+
+	testCases := []struct {
+		name      string
+		idMonster string
+	}{
+		{
+			name:      "find_by_id_monster_success",
+			idMonster: newMonster.ID,
+		},
+		{
+			name:      "find_by_id_monster_failed",
+			idMonster: "368bd987-dec6-4405-a036-bc1232db21b2",
+		},
+	}
+
+	// Test
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			request := httptest.NewRequest(http.MethodGet, "http://localhost:3000/api/v1/monster/"+tc.idMonster, nil)
+			// Added header content type
+			request.Header.Add("Content-Type", "application/json")
+
+			// Create new recorder
+			recorder := httptest.NewRecorder()
+
+			// Run http test
+			RouteTest.ServeHTTP(recorder, request)
+
+			// Get response
+			response := recorder.Result()
+
+			// Read all response
+			body, _ := io.ReadAll(response.Body)
+			var responseBody map[string]interface{}
+			json.Unmarshal(body, &responseBody)
+
+			if tc.name == "find_by_id_monster_success" {
+				require.Equal(t, 200, response.StatusCode)
+				require.Equal(t, 200, int(responseBody["code"].(float64)))
+				require.Equal(t, "success", responseBody["status"])
+				require.Equal(t, "profile detail of monsters", responseBody["message"])
+				require.NotEmpty(t, responseBody["data"])
+
+				var contextData = responseBody["data"].(map[string]any)
+
+				require.NotEmpty(t, contextData["category_name"])
+
+				require.Equal(t, newMonster.ID, contextData["id"])
+				require.Equal(t, newMonster.Name, contextData["name"])
+				require.Equal(t, newMonster.Description, contextData["description"])
+				require.Equal(t, newMonster.Length, float32(contextData["length"].(float64)))
+				require.Equal(t, newMonster.Weight, uint16(contextData["weight"].(float64)))
+				require.Equal(t, newMonster.Hp, uint16(contextData["hp"].(float64)))
+				require.Equal(t, newMonster.Attack, uint16(contextData["attack"].(float64)))
+				require.Equal(t, newMonster.Defends, uint16(contextData["defends"].(float64)))
+				require.Equal(t, newMonster.Speed, uint16(contextData["speed"].(float64)))
+				require.Equal(t, newMonster.Catched, contextData["catched"])
+
+				require.NotEqual(t, 0, len(contextData["types"].([]any)))
+				for _, ty := range contextData["types"].([]any) {
+					listType := ty.(map[string]any)
+					require.NotEmpty(t, listType["name"])
+				}
+			} else {
+				require.Equal(t, 400, response.StatusCode)
+				require.Equal(t, 400, int(responseBody["code"].(float64)))
+				require.Equal(t, "error", responseBody["status"])
+				require.Equal(t, "bad request", responseBody["message"])
+
+				errMessage := fmt.Sprintf("monster with id %s not found", tc.idMonster)
+				require.Equal(t, errMessage, responseBody["data"].(map[string]interface{})["errors"])
+			}
+
+		})
+	}
+}

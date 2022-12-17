@@ -6,6 +6,10 @@ import (
 	"github.com/letenk/pokedex/models/domain"
 )
 
+type MosterURI struct {
+	ID string `uri:"id" binding:"required"`
+}
+
 type MonsterQueryRequest struct {
 	Name    string   `form:"name"`
 	Types   []string `form:"types"`
