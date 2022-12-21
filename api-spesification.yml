@@ -236,14 +236,14 @@ paths:
                       name: "Chikorita"
                       category_name: "Leal Monster"
                       catched: false
-                      image: "http://localhost:3000/static/images/chikorita.jpg"
+                      image_url: "http://localhost:3000/static/images/chikorita.jpg"
                       type_monster: ["GRASS"]
 
                     - id: "fad7a07f-b4cc-428b-b405-124c1589f32c"
                       name: "Lugia"
                       category_name: "Diving Monster"
                       catched: true
-                      image: "http://localhost:3000/static/images/lugia.jpg"
+                      image_url: "http://localhost:3000/static/images/lugia.jpg"
                       type_monster: ["PSYCHIC", "FLYING"]
 
                 Query Parameters Not Found fetch all monsters:
@@ -276,7 +276,7 @@ paths:
               attack: 270
               defends: 80
               speed: 477
-              image: "chikorita.jpg" 
+              image_url: "chikorita.jpg" 
       responses:
         201:
           description: Monster created
@@ -388,7 +388,7 @@ paths:
                       category_name: "Leal Monster"
                       type_monster: ["GRASS"]
                       catched: false
-                      image: "http://localhost:3000/static/images/chikorita.jpg"
+                      image_url: "http://localhost:3000/static/images/chikorita.jpg"
                       length: 5.1
                       weight: 216
                       hp: 150
@@ -465,7 +465,7 @@ paths:
                     attack: 177
                     defends: 99
                     speed: 432
-                    image: "lugia.jpg" 
+                    image_url: "http://localhost:3000/static/images/lugia.jpg"
         400:
           description: Monster not found
           content:
@@ -733,7 +733,7 @@ components:
                 type: string
               catched:
                 type: boolean
-              image:
+              image_url:
                 type: string
               type_monster:
                 type: array
@@ -797,7 +797,7 @@ components:
               type: integer
               required:
               - "true"
-            image:
+            image_url:
               type: string
               required:
                 - "true"
@@ -824,7 +824,7 @@ components:
               type: string
             catched:
               type: boolean
-            image:
+            image_url:
               type: string
             type_monster:
               type: array
