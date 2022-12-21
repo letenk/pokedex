@@ -253,7 +253,6 @@ func TestFindByIDMonsterUsecase(t *testing.T) {
 		tc := testCases[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
 			// Find by id
 			monster, err := usecaseMonster.FindByID(ctx, tc.idMonster)
 
@@ -554,7 +553,6 @@ func TestDeleteMonsterUsecase(t *testing.T) {
 		tc := testCases[i]
 
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
 			// Delete
 			ok, err := usecaseMonster.Delete(context.Background(), tc.idMonster)
 

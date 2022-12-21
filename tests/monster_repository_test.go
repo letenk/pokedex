@@ -461,7 +461,6 @@ func TestUpdateMonsterRepository(t *testing.T) {
 }
 
 func TestDeleteMonsterRepository(t *testing.T) {
-	t.Parallel()
 	newMonster, _ := RandomCreateMonster(t)
 
 	repositoryMonster := repository.NewMonsterRespository(ConnTest)
