@@ -35,8 +35,8 @@
     - [x] Get profile detail monster by id
     - [x] Add (admin only)
         - [x] Upload image to aws s3
-    - [ ] Update (admin only)
-    - [ ] Update as mark a moster as captured (user only)
+    - [x] Update (admin only)
+    - [x] Update as mark a moster as captured (user only)
     - [ ] Delete (admin only)
     - [x] Get all of list categories (admin only)
     - [x] Get all of list types (admin only)
@@ -46,3 +46,4 @@
 - [ ] Github Workflows
     - [x] Test
     - [ ] Create image docker and push into docker hub
+        - [ ] Database use aws RDS

@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/letenk/pokedex/models/web"
@@ -481,7 +482,6 @@ func TestFindByIDMonsterHandler(t *testing.T) {
 
 func TestUpdateMonsterHandler(t *testing.T) {
 	newMonster := RandomCreateMonsterUsecase(t)
-	fmt.Println(newMonster.ImageURL)
 	var randTypes []string
 	var randCategories []string
 	// Get data random category and type
@@ -804,5 +804,133 @@ func TestUpdateMonsterHandler(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestUpdateMarkMonsterCapturedHandler(t *testing.T) {
+	newMonster, _ := RandomCreateMonster(t)
+
+	// Test Cases
+	testCases := []struct {
+		name      string
+		idMonster string
+		reqLogin  web.UserLoginRequest
+		reqUpdate web.MonsterUpdateRequestMonsterCapture
+	}{
+		{
+			name:      "update_mark_monster_captured_monster_success",
+			idMonster: newMonster.ID,
+			reqLogin: web.UserLoginRequest{
+				Username: "user",
+				Password: "password",
+			},
+			reqUpdate: web.MonsterUpdateRequestMonsterCapture{
+				Catched: true,
+			},
+		},
+		{
+			name:      "update_mark_monster_captured_monster_failed_monster_not_found",
+			idMonster: "368bd987-dec6-4405-a036-bc1232db21b2",
+			reqLogin: web.UserLoginRequest{
+				Username: "user",
+				Password: "password",
+			},
+			reqUpdate: web.MonsterUpdateRequestMonsterCapture{
+				Catched: true,
+			},
+		},
+		{
+			name:      "failed_forbidden_with_role_admin",
+			idMonster: newMonster.ID,
+			reqLogin: web.UserLoginRequest{
+				Username: "admin",
+				Password: "password",
+			},
+			reqUpdate: web.MonsterUpdateRequestMonsterCapture{
+				Catched: true,
+			},
+		},
+		{
+			name:      "failed_unauthorized_as_guest",
+			idMonster: newMonster.ID,
+			reqLogin:  web.UserLoginRequest{},
+			reqUpdate: web.MonsterUpdateRequestMonsterCapture{
+				Catched: true,
+			},
+		},
+	}
+
+	// Test
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Login to get token
+			var token string
+			// if tc.name same failed_unauthorized_as_guest dont try login
+			if tc.name != "failed_unauthorized_as_guest" {
+				token = GetToken(tc.reqLogin)
+			}
+
+			// Request body
+			dataBody := fmt.Sprintf(`{"catched": "%v"}`, tc.reqUpdate.Catched)
+			requestBody := strings.NewReader(dataBody)
+
+			// Url
+			url := fmt.Sprintf("http://localhost:3000/api/v1/monster/%s/captured", tc.idMonster)
+			// Test access categories
+			request := httptest.NewRequest(http.MethodPatch, url, requestBody)
+
+			// if tc.name same failed_unauthorized_as_guest dont set header
+			if tc.name != "failed_unauthorized_as_guest" {
+				// Added token in header Authorization
+				strToken := fmt.Sprintf("Bearer %s", token)
+				request.Header.Add("Authorization", strToken)
+			}
+
+			// Create new recorder
+			recorder := httptest.NewRecorder()
+
+			// Run http test
+			RouteTest.ServeHTTP(recorder, request)
+
+			// Get response
+			response := recorder.Result()
+
+			// Read all response
+			body, _ := io.ReadAll(response.Body)
+			var responseBody map[string]interface{}
+			json.Unmarshal(body, &responseBody)
+
+			if tc.name == "failed_forbidden_with_role_admin" {
+				require.Equal(t, 403, response.StatusCode)
+				require.Equal(t, 403, int(responseBody["code"].(float64)))
+				require.Equal(t, "error", responseBody["status"])
+				require.Equal(t, "forbidden", responseBody["message"])
+			} else if tc.name == "failed_unauthorized_as_guest" {
+				require.Equal(t, 401, response.StatusCode)
+				require.Equal(t, 401, int(responseBody["code"].(float64)))
+				require.Equal(t, "error", responseBody["status"])
+				require.Equal(t, "unauthorized", responseBody["message"])
+			} else if tc.name == "update_mark_monster_captured_monster_failed_monster_not_found" {
+				require.Equal(t, 400, response.StatusCode)
+				require.Equal(t, 400, int(responseBody["code"].(float64)))
+				require.Equal(t, "error", responseBody["status"])
+				require.Equal(t, "update monster captured failed", responseBody["message"])
+
+				errMessage := fmt.Sprintf("monster with id %s not found", tc.idMonster)
+				require.Equal(t, errMessage, responseBody["data"].(map[string]interface{})["errors"])
+			} else {
+				// if tc.name == "update_mark_monster_captured_monster_success",
+				require.Equal(t, 200, response.StatusCode)
+				require.Equal(t, 200, int(responseBody["code"].(float64)))
+				require.Equal(t, "success", responseBody["status"])
+				msgSuccess := fmt.Sprintf("monster with id %s updated", tc.idMonster)
+				require.Equal(t, msgSuccess, responseBody["message"])
+			}
+		})
+
 	}
 }

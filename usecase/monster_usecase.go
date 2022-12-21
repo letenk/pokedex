@@ -23,6 +23,7 @@ type MonsterUsecase interface {
 	FindByID(ctx context.Context, ID string) (domain.Monster, error)
 	Create(ctx context.Context, monster web.MonsterCreateRequest, file multipart.File, fileName string) (domain.Monster, error)
 	Update(ctx context.Context, ID string, reqUpdate web.MonsterUpdateRequest, file multipart.File, fileName string) (domain.Monster, error)
+	UpdateMarkMonsterCaptured(ctx context.Context, ID string, reqUpdate web.MonsterUpdateRequestMonsterCapture) (bool, error)
 }
 
 type monsterUsecase struct {
@@ -299,5 +300,22 @@ func (u *monsterUsecase) Update(ctx context.Context, ID string, reqUpdate web.Mo
 	}
 
 	return monsterUpdated, nil
+}
 
+func (u *monsterUsecase) UpdateMarkMonsterCaptured(ctx context.Context, ID string, reqUpdate web.MonsterUpdateRequestMonsterCapture) (bool, error) {
+	// Find by id
+	currentMonster, err := u.repository.FindByID(ctx, ID)
+	if err != nil {
+		return false, err
+	}
+
+	currentMonster.Catched = reqUpdate.Catched
+
+	// Update monster
+	_, err = u.repository.Update(ctx, currentMonster)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
