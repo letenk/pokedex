@@ -334,24 +334,6 @@ func TestUpdateMonsterUsecase(t *testing.T) {
 		},
 		{
 			id:       newMonster.ID,
-			name:     "update_success_without_image",
-			fileName: "",
-			req: web.MonsterUpdateRequest{
-				Name:        "UPDATED",
-				CategoryID:  randCategories[2],
-				Description: "UPDATED",
-				Length:      "1.1",
-				Weight:      "1",
-				Hp:          "1",
-				Attack:      "1",
-				Defends:     "1",
-				Speed:       "1",
-				Catched:     "true",
-				TypeID:      randTypes,
-			},
-		},
-		{
-			id:       newMonster.ID,
 			name:     "update_success_with_image",
 			fileName: fileName,
 			req: web.MonsterUpdateRequest{
@@ -466,29 +448,30 @@ func TestUpdateMonsterUsecase(t *testing.T) {
 				for i := 0; i < len(updatedMonster.TypeID); i++ {
 					require.NotEqual(t, newMonster.TypeID[i], updatedMonster.TypeID[i])
 				}
-			} else {
-				// If tc.name == "update_success_without_image"
-				require.NoError(t, err)
-
-				require.Equal(t, newMonster.ID, updatedMonster.ID)
-				// require.Equal(t, newMonster.ImageName, updatedMonster.ImageName)
-				// require.Equal(t, newMonster.ImageURL, updatedMonster.ImageURL)
-
-				require.NotEqual(t, newMonster.Name, updatedMonster.Name)
-				require.NotEqual(t, newMonster.CategoryID, updatedMonster.CategoryID)
-				require.NotEqual(t, newMonster.Description, updatedMonster.Description)
-				require.NotEqual(t, newMonster.Length, updatedMonster.Length)
-				require.NotEqual(t, newMonster.Weight, updatedMonster.Weight)
-				require.NotEqual(t, newMonster.Hp, updatedMonster.Hp)
-				require.NotEqual(t, newMonster.Attack, updatedMonster.Attack)
-				require.NotEqual(t, newMonster.Defends, updatedMonster.Defends)
-				require.NotEqual(t, newMonster.Speed, updatedMonster.Speed)
-				require.NotEqual(t, newMonster.Catched, updatedMonster.Catched)
-
-				for i := 0; i < len(updatedMonster.TypeID); i++ {
-					require.NotEqual(t, newMonster.TypeID[i], updatedMonster.TypeID[i])
-				}
 			}
+			// else {
+			// 	// If tc.name == "update_success_without_image"
+			// 	require.NoError(t, err)
+
+			// 	require.Equal(t, newMonster.ID, updatedMonster.ID)
+			// 	// require.Equal(t, newMonster.ImageName, updatedMonster.ImageName)
+			// 	// require.Equal(t, newMonster.ImageURL, updatedMonster.ImageURL)
+
+			// 	require.NotEqual(t, newMonster.Name, updatedMonster.Name)
+			// 	require.NotEqual(t, newMonster.CategoryID, updatedMonster.CategoryID)
+			// 	require.NotEqual(t, newMonster.Description, updatedMonster.Description)
+			// 	require.NotEqual(t, newMonster.Length, updatedMonster.Length)
+			// 	require.NotEqual(t, newMonster.Weight, updatedMonster.Weight)
+			// 	require.NotEqual(t, newMonster.Hp, updatedMonster.Hp)
+			// 	require.NotEqual(t, newMonster.Attack, updatedMonster.Attack)
+			// 	require.NotEqual(t, newMonster.Defends, updatedMonster.Defends)
+			// 	require.NotEqual(t, newMonster.Speed, updatedMonster.Speed)
+			// 	require.NotEqual(t, newMonster.Catched, updatedMonster.Catched)
+
+			// 	for i := 0; i < len(updatedMonster.TypeID); i++ {
+			// 		require.NotEqual(t, newMonster.TypeID[i], updatedMonster.TypeID[i])
+			// 	}
+			// }
 
 		})
 	}
