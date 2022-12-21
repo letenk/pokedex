@@ -471,8 +471,8 @@ func TestUpdateMonsterUsecase(t *testing.T) {
 				require.NoError(t, err)
 
 				require.Equal(t, newMonster.ID, updatedMonster.ID)
-				require.Equal(t, newMonster.ImageName, updatedMonster.ImageName)
-				require.Equal(t, newMonster.ImageURL, updatedMonster.ImageURL)
+				// require.Equal(t, newMonster.ImageName, updatedMonster.ImageName)
+				// require.Equal(t, newMonster.ImageURL, updatedMonster.ImageURL)
 
 				require.NotEqual(t, newMonster.Name, updatedMonster.Name)
 				require.NotEqual(t, newMonster.CategoryID, updatedMonster.CategoryID)
