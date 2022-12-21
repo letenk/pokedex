@@ -14,9 +14,10 @@ import (
 )
 
 type MonsterRepository interface {
-	Create(ctx context.Context, monster domain.Monster) (domain.Monster, error)
 	FindAll(ctx context.Context, reqQuery web.MonsterQueryRequest) ([]domain.Monster, error)
 	FindByID(ctx context.Context, ID string) (domain.Monster, error)
+	Create(ctx context.Context, monster domain.Monster) (domain.Monster, error)
+	Update(ctx context.Context, monster domain.Monster) (domain.Monster, error)
 }
 
 type monsterRespository struct {
@@ -147,4 +148,66 @@ func (r *monsterRespository) FindByID(ctx context.Context, ID string) (domain.Mo
 	}
 
 	return monster, nil
+}
+
+func (r *monsterRespository) Update(ctx context.Context, monster domain.Monster) (domain.Monster, error) {
+	// Create a context in order to disconnect
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	// Cancel context after all process ends
+	defer cancel()
+
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+
+		// Update data in table monster
+		err := tx.WithContext(ctx).Save(&monster).Error
+		if err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) {
+				if pgErr.Code == "23503" {
+					var err error
+					errMessage := fmt.Sprint("invalid category id or type id, please check valid id in each of their list")
+					err = errors.New(errMessage)
+					return err
+				}
+			}
+			return err
+		}
+
+		if len(monster.TypeID) != 0 {
+			tx.WithContext(ctx).Where("monster_id = ?", monster.ID).Delete(&domain.MonsterType{})
+
+			// Insert relation monster id and type id
+			for _, typeID := range monster.TypeID {
+				monsterTag := new(domain.MonsterType)
+				monsterTag.MonsterID = monster.ID
+				monsterTag.TypeID = typeID
+				err = tx.WithContext(ctx).Create(&monsterTag).Error
+				if err != nil {
+					var pgErr *pgconn.PgError
+					if errors.As(err, &pgErr) {
+						if pgErr.Code == "23503" {
+							var err error
+							errMessage := fmt.Sprint("invalid category id or type id, please check valid id in each of their list")
+							err = errors.New(errMessage)
+							return err
+						}
+					}
+					return err
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return monster, err
+	}
+
+	monsterUpdated, err := r.FindByID(ctx, monster.ID)
+	if err != nil {
+		return monster, err
+	}
+
+	return monsterUpdated, nil
 }

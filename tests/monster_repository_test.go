@@ -68,7 +68,8 @@ func RandomCreateMonster(t *testing.T) (domain.Monster, []string) {
 				Attack:      uint16(util.RandomInt(50, 500)),
 				Defends:     uint16(util.RandomInt(50, 500)),
 				Speed:       uint16(util.RandomInt(50, 500)),
-				Image:       util.RandomString(10),
+				ImageName:   util.RandomString(10),
+				ImageURL:    util.RandomString(10),
 				TypeID:      randTypes,
 			},
 		},
@@ -84,7 +85,8 @@ func RandomCreateMonster(t *testing.T) (domain.Monster, []string) {
 				Attack:      uint16(util.RandomInt(50, 500)),
 				Defends:     uint16(util.RandomInt(50, 500)),
 				Speed:       uint16(util.RandomInt(50, 500)),
-				Image:       util.RandomString(10),
+				ImageName:   util.RandomString(10),
+				ImageURL:    util.RandomString(10),
 				TypeID:      randTypes,
 			},
 		},
@@ -100,7 +102,8 @@ func RandomCreateMonster(t *testing.T) (domain.Monster, []string) {
 				Attack:      uint16(util.RandomInt(50, 500)),
 				Defends:     uint16(util.RandomInt(50, 500)),
 				Speed:       uint16(util.RandomInt(50, 500)),
-				Image:       util.RandomString(10),
+				ImageName:   util.RandomString(10),
+				ImageURL:    util.RandomString(10),
 				TypeID:      []string{"558160ef-e8f5-4951-b5f4-feeb0815b510", "d5a8d4bb-eb0a-44a4-ae46-eb2af2b2002d"},
 			},
 		},
@@ -115,7 +118,8 @@ func RandomCreateMonster(t *testing.T) (domain.Monster, []string) {
 		if tc.name != "success_create_monster" {
 			_, err := repositoryMonster.Create(context.Background(), tc.data)
 			require.Error(t, err)
-			require.Equal(t, "invalid category id or type id, please check valid id in each of their list", err.Error())
+			errMessage := fmt.Sprint("invalid category id or type id, please check valid id in each of their list")
+			require.Equal(t, errMessage, err.Error())
 		} else {
 			newMonster, err := repositoryMonster.Create(context.Background(), tc.data)
 			require.NoError(t, err)
@@ -132,7 +136,8 @@ func RandomCreateMonster(t *testing.T) (domain.Monster, []string) {
 			require.Equal(t, tc.data.Attack, newMonster.Attack)
 			require.Equal(t, tc.data.Defends, newMonster.Defends)
 			require.Equal(t, tc.data.Speed, newMonster.Speed)
-			require.Equal(t, tc.data.Image, newMonster.Image)
+			require.Equal(t, tc.data.ImageName, newMonster.ImageName)
+			require.Equal(t, tc.data.ImageURL, newMonster.ImageURL)
 
 			monster = newMonster
 		}
@@ -220,9 +225,9 @@ func TestFindAllMonsterRepository(t *testing.T) {
 				require.NotEmpty(t, monster.Name)
 				require.NotEmpty(t, monster.Category.Name)
 				require.NotEmpty(t, strconv.FormatBool(monster.Catched))
-				require.NotEmpty(t, monster.Image)
+				require.NotEmpty(t, monster.ImageName)
+				require.NotEmpty(t, monster.ImageURL)
 
-				require.NotEqual(t, 0, len(monster.Types))
 				for i := 0; i < len(monster.Types); i++ {
 					require.NotEmpty(t, monster.Types[i].Name)
 				}
@@ -275,7 +280,8 @@ func TestFindByIDMonsterRepository(t *testing.T) {
 				require.Equal(t, newMonster.Defends, monster.Defends)
 				require.Equal(t, newMonster.Speed, monster.Speed)
 				require.Equal(t, newMonster.Catched, monster.Catched)
-				require.Equal(t, newMonster.Image, monster.Image)
+				require.Equal(t, newMonster.ImageName, monster.ImageName)
+				require.Equal(t, newMonster.ImageURL, monster.ImageURL)
 
 				for _, ty := range monster.Types {
 					require.NotEmpty(t, ty.Name)
@@ -289,4 +295,169 @@ func TestFindByIDMonsterRepository(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestUpdateMonsterRepository(t *testing.T) {
+	// Create random monsters
+	newMonster, _ := RandomCreateMonster(t)
+
+	repositoryMonster := repository.NewMonsterRespository(ConnTest)
+	ctx := context.Background()
+
+	var randTypes []string
+	var randCategories []string
+	// Get data random category and type
+	for i := 0; i < 3; i++ {
+		randCategory, randType := RandomCategoryAndType()
+		randTypes = append(randTypes, randType)
+		randCategories = append(randCategories, randCategory)
+	}
+
+	testCases := []struct {
+		name       string
+		dataUpdate domain.Monster
+	}{
+		{
+			name: "update_success_with_types",
+			dataUpdate: domain.Monster{
+				ID:          newMonster.ID,
+				Name:        "UPDATED",
+				CategoryID:  randCategories[0],
+				Description: "UPDATED",
+				Length:      1.1,
+				Weight:      1,
+				Hp:          1,
+				Attack:      1,
+				Defends:     1,
+				Speed:       1,
+				Catched:     true,
+				ImageName:   "UPDATED",
+				ImageURL:    "UPDATED",
+				TypeID:      randTypes,
+			},
+		},
+		{
+			name: "update_success_without_types",
+			dataUpdate: domain.Monster{
+				ID:          newMonster.ID,
+				Name:        "UPDATED",
+				CategoryID:  randCategories[0],
+				Description: "UPDATED",
+				Length:      1.1,
+				Weight:      1,
+				Hp:          1,
+				Attack:      1,
+				Defends:     1,
+				Speed:       1,
+				Catched:     true,
+				ImageName:   "UPDATED",
+				ImageURL:    "UPDATED",
+				// TypeID:      randTypes,
+			},
+		},
+		{
+			name: "update_failed_category_id_invalid",
+			dataUpdate: domain.Monster{
+				ID:          newMonster.ID,
+				Name:        "UPDATED",
+				CategoryID:  "3e1a7c6c-4272-42cf-a9d2-d0814b4454e9",
+				Description: "UPDATED",
+				Length:      1.1,
+				Weight:      1,
+				Hp:          1,
+				Attack:      1,
+				Defends:     1,
+				Speed:       1,
+				Catched:     true,
+				ImageName:   "UPDATED",
+				ImageURL:    "UPDATED",
+				TypeID:      randTypes,
+			},
+		},
+		{
+			name: "update_failed_types_id_invalid",
+			dataUpdate: domain.Monster{
+				ID:          newMonster.ID,
+				Name:        "UPDATED",
+				CategoryID:  randCategories[0],
+				Description: "UPDATED",
+				Length:      1.1,
+				Weight:      1,
+				Hp:          1,
+				Attack:      1,
+				Defends:     1,
+				Speed:       1,
+				Catched:     true,
+				ImageName:   "UPDATED",
+				ImageURL:    "UPDATED",
+				TypeID:      []string{"558160ef-e8f5-4951-b5f4-feeb0815b510", "d5a8d4bb-eb0a-44a4-ae46-eb2af2b2002d"},
+			},
+		},
+	}
+
+	// Test
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			// Update
+			_, err := repositoryMonster.Update(ctx, tc.dataUpdate)
+
+			// Find monster by id
+			updatedMonster, _ := repositoryMonster.FindByID(ctx, tc.dataUpdate.ID)
+
+			if tc.name == "update_success_without_types" {
+				require.NoError(t, err)
+
+				require.Equal(t, newMonster.ID, updatedMonster.ID)
+
+				require.NotEqual(t, newMonster.Name, updatedMonster.Name)
+				require.NotEqual(t, newMonster.Category.Name, updatedMonster.Category.Name)
+				require.NotEqual(t, newMonster.Description, updatedMonster.Description)
+				require.NotEqual(t, newMonster.Length, updatedMonster.Length)
+				require.NotEqual(t, newMonster.Weight, updatedMonster.Weight)
+				require.NotEqual(t, newMonster.Hp, updatedMonster.Hp)
+				require.NotEqual(t, newMonster.Attack, updatedMonster.Attack)
+				require.NotEqual(t, newMonster.Defends, updatedMonster.Defends)
+				require.NotEqual(t, newMonster.Speed, updatedMonster.Speed)
+				require.NotEqual(t, newMonster.Catched, updatedMonster.Catched)
+				require.NotEqual(t, newMonster.ImageName, updatedMonster.ImageName)
+				require.NotEqual(t, newMonster.ImageURL, updatedMonster.ImageURL)
+
+				for i := 0; i < len(updatedMonster.TypeID); i++ {
+					require.Equal(t, newMonster.TypeID[i], updatedMonster.TypeID[i])
+				}
+			} else if tc.name == "update_failed_category_id_invalid" || tc.name == "update_failed_types_id_invalid" {
+				require.Error(t, err)
+				var errTest error
+				errMessage := fmt.Sprintf("invalid category id or type id, please check valid id in each of their list")
+				errTest = errors.New(errMessage)
+				require.Equal(t, errTest, err)
+			} else {
+				require.NoError(t, err)
+
+				require.Equal(t, newMonster.ID, updatedMonster.ID)
+
+				require.NotEqual(t, newMonster.Name, updatedMonster.Name)
+				require.NotEqual(t, newMonster.Category.Name, updatedMonster.Category.Name)
+				require.NotEqual(t, newMonster.Description, updatedMonster.Description)
+				require.NotEqual(t, newMonster.Length, updatedMonster.Length)
+				require.NotEqual(t, newMonster.Weight, updatedMonster.Weight)
+				require.NotEqual(t, newMonster.Hp, updatedMonster.Hp)
+				require.NotEqual(t, newMonster.Attack, updatedMonster.Attack)
+				require.NotEqual(t, newMonster.Defends, updatedMonster.Defends)
+				require.NotEqual(t, newMonster.Speed, updatedMonster.Speed)
+				require.NotEqual(t, newMonster.Catched, updatedMonster.Catched)
+				require.NotEqual(t, newMonster.ImageName, updatedMonster.ImageName)
+				require.NotEqual(t, newMonster.ImageURL, updatedMonster.ImageURL)
+
+				for i := 0; i < len(updatedMonster.TypeID); i++ {
+					require.NotEqual(t, newMonster.TypeID[i], updatedMonster.TypeID[i])
+				}
+			}
+
+		})
+	}
+
 }

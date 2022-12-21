@@ -380,7 +380,7 @@ func TestFindAllMonsterHandler(t *testing.T) {
 				require.NotEmpty(t, list["id"])
 				require.NotEmpty(t, list["name"])
 				require.NotEmpty(t, list["category_name"])
-				require.NotEmpty(t, list["image"])
+				require.NotEmpty(t, list["image_url"])
 
 				strCatched := strconv.FormatBool(list["catched"].(bool))
 				require.NotEmpty(t, strCatched)
@@ -475,6 +475,334 @@ func TestFindByIDMonsterHandler(t *testing.T) {
 				require.Equal(t, errMessage, responseBody["data"].(map[string]interface{})["errors"])
 			}
 
+		})
+	}
+}
+
+func TestUpdateMonsterHandler(t *testing.T) {
+	newMonster := RandomCreateMonsterUsecase(t)
+	fmt.Println(newMonster.ImageURL)
+	var randTypes []string
+	var randCategories []string
+	// Get data random category and type
+	for i := 0; i < 3; i++ {
+		randCategory, randType := RandomCategoryAndType()
+		randTypes = append(randTypes, randType)
+		randCategories = append(randCategories, randCategory)
+	}
+
+	// Test Cases
+	testCases := []struct {
+		name             string
+		reqLogin         web.UserLoginRequest
+		reqCreateMonster web.MonsterUpdateRequest
+	}{
+		{
+			name: "update_success_with_field_empty",
+			reqLogin: web.UserLoginRequest{
+				Username: "admin",
+				Password: "password",
+			},
+			reqCreateMonster: web.MonsterUpdateRequest{
+				Name:        "",
+				CategoryID:  "",
+				Description: "",
+				Length:      "",
+				Weight:      "",
+				Hp:          "",
+				Attack:      "",
+				Defends:     "",
+				Speed:       "",
+				Catched:     "",
+			},
+		},
+		{
+			name: "success_with_role_admin_with_image",
+
+			reqLogin: web.UserLoginRequest{
+				Username: "admin",
+				Password: "password",
+			},
+
+			reqCreateMonster: web.MonsterUpdateRequest{
+				Name:        util.RandomString(10),
+				CategoryID:  randCategories[0],
+				Description: util.RandomString(20),
+				Length:      "54.2",
+				Weight:      strconv.Itoa(int(util.RandomInt(50, 500))),
+				Hp:          strconv.Itoa(int(util.RandomInt(50, 500))),
+				Attack:      strconv.Itoa(int(util.RandomInt(50, 500))),
+				Defends:     strconv.Itoa(int(util.RandomInt(50, 500))),
+				Speed:       strconv.Itoa(int(util.RandomInt(50, 500))),
+				Catched:     "true",
+				TypeID:      randTypes,
+			},
+		},
+		{
+			name: "failed_forbidden_with_role_user",
+			reqLogin: web.UserLoginRequest{
+				Username: "user",
+				Password: "password",
+			},
+
+			reqCreateMonster: web.MonsterUpdateRequest{
+				Name:        util.RandomString(10),
+				CategoryID:  randCategories[0],
+				Description: util.RandomString(20),
+				Length:      "54.3",
+				Weight:      strconv.Itoa(int(util.RandomInt(50, 500))),
+				Hp:          strconv.Itoa(int(util.RandomInt(50, 500))),
+				Attack:      strconv.Itoa(int(util.RandomInt(50, 500))),
+				Defends:     strconv.Itoa(int(util.RandomInt(50, 500))),
+				Speed:       strconv.Itoa(int(util.RandomInt(50, 500))),
+				Catched:     "true",
+				TypeID:      randTypes,
+			},
+		},
+		{
+			name:     "failed_unauthorized_as_guest",
+			reqLogin: web.UserLoginRequest{},
+
+			reqCreateMonster: web.MonsterUpdateRequest{
+				Name:        util.RandomString(10),
+				CategoryID:  randCategories[0],
+				Description: util.RandomString(20),
+				Length:      "54.3",
+				Weight:      strconv.Itoa(int(util.RandomInt(50, 500))),
+				Hp:          strconv.Itoa(int(util.RandomInt(50, 500))),
+				Attack:      strconv.Itoa(int(util.RandomInt(50, 500))),
+				Defends:     strconv.Itoa(int(util.RandomInt(50, 500))),
+				Speed:       strconv.Itoa(int(util.RandomInt(50, 500))),
+				Catched:     "true",
+				TypeID:      randTypes,
+			},
+		},
+		{
+			name: "failed_invalid_category_id",
+			reqLogin: web.UserLoginRequest{
+				Username: "admin",
+				Password: "password",
+			},
+
+			reqCreateMonster: web.MonsterUpdateRequest{
+				Name:        util.RandomString(10),
+				CategoryID:  "4562482c-7acd-4daf-901f-d95c7a7afd65",
+				Description: util.RandomString(20),
+				Length:      "54.3",
+				Weight:      strconv.Itoa(int(util.RandomInt(50, 500))),
+				Hp:          strconv.Itoa(int(util.RandomInt(50, 500))),
+				Attack:      strconv.Itoa(int(util.RandomInt(50, 500))),
+				Defends:     strconv.Itoa(int(util.RandomInt(50, 500))),
+				Speed:       strconv.Itoa(int(util.RandomInt(50, 500))),
+				Catched:     "true",
+				TypeID:      randTypes,
+			},
+		},
+		{
+			name: "failed_invalid_type_id",
+			reqLogin: web.UserLoginRequest{
+				Username: "admin",
+				Password: "password",
+			},
+
+			reqCreateMonster: web.MonsterUpdateRequest{
+				Name:        util.RandomString(10),
+				CategoryID:  "4562482c-7acd-4daf-901f-d95c7a7afd65",
+				Description: util.RandomString(20),
+				Length:      "54.3",
+				Weight:      strconv.Itoa(int(util.RandomInt(50, 500))),
+				Hp:          strconv.Itoa(int(util.RandomInt(50, 500))),
+				Attack:      strconv.Itoa(int(util.RandomInt(50, 500))),
+				Defends:     strconv.Itoa(int(util.RandomInt(50, 500))),
+				Speed:       strconv.Itoa(int(util.RandomInt(50, 500))),
+				Catched:     "true",
+				TypeID:      []string{"558160ef-e8f5-4951-b5f4-feeb0815b511", "d5a8d4bb-eb0a-44a4-ae46-eb2af2b2002c"},
+			},
+		},
+	}
+
+	// Test
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+
+			// Login to get token
+			var token string
+			// if tc.name same failed_unauthorized_as_guest dont try login
+			if tc.name != "failed_unauthorized_as_guest" {
+				token = GetToken(tc.reqLogin)
+			}
+
+			// Create new monster
+			// Data body
+			bodyRequest := new(bytes.Buffer)
+			writer := multipart.NewWriter(bodyRequest)
+
+			if tc.name == "update_success_with_field_empty" {
+				writer.WriteField("name", tc.reqCreateMonster.Name)
+				writer.WriteField("category_id", tc.reqCreateMonster.CategoryID)
+				writer.WriteField("description", tc.reqCreateMonster.Description)
+				writer.WriteField("length", tc.reqCreateMonster.Length)
+				writer.WriteField("weight", tc.reqCreateMonster.Weight)
+				writer.WriteField("hp", tc.reqCreateMonster.Hp)
+				writer.WriteField("attack", tc.reqCreateMonster.Attack)
+				writer.WriteField("defends", tc.reqCreateMonster.Defends)
+				writer.WriteField("speed", tc.reqCreateMonster.Speed)
+				writer.WriteField("catched", tc.reqCreateMonster.Catched)
+
+				writer.Close()
+			} else if tc.name != "success_with_role_admin_with_image" {
+				// if tc.name is "failed_forbidden_with_role_user", "failed_unauthorized_as_guest", "failed_invalid_category_id", "failed_invalid_type_id",
+				writer.WriteField("name", tc.reqCreateMonster.Name)
+				writer.WriteField("category_id", tc.reqCreateMonster.CategoryID)
+				writer.WriteField("description", tc.reqCreateMonster.Description)
+				writer.WriteField("length", tc.reqCreateMonster.Length)
+				writer.WriteField("weight", tc.reqCreateMonster.Weight)
+				writer.WriteField("hp", tc.reqCreateMonster.Hp)
+				writer.WriteField("attack", tc.reqCreateMonster.Attack)
+				writer.WriteField("defends", tc.reqCreateMonster.Defends)
+				writer.WriteField("speed", tc.reqCreateMonster.Speed)
+				writer.WriteField("catched", tc.reqCreateMonster.Catched)
+				writer.WriteField("type_id", tc.reqCreateMonster.TypeID[0])
+				writer.WriteField("type_id", tc.reqCreateMonster.TypeID[1])
+
+				writer.Close()
+			} else {
+				// if tc.name == "success_with_role_admin_with_image"
+				writer.WriteField("name", tc.reqCreateMonster.Name)
+				writer.WriteField("category_id", tc.reqCreateMonster.CategoryID)
+				writer.WriteField("description", tc.reqCreateMonster.Description)
+				writer.WriteField("length", tc.reqCreateMonster.Length)
+				writer.WriteField("weight", tc.reqCreateMonster.Weight)
+				writer.WriteField("hp", tc.reqCreateMonster.Hp)
+				writer.WriteField("attack", tc.reqCreateMonster.Attack)
+				writer.WriteField("defends", tc.reqCreateMonster.Defends)
+				writer.WriteField("speed", tc.reqCreateMonster.Speed)
+				writer.WriteField("catched", tc.reqCreateMonster.Catched)
+				writer.WriteField("type_id", tc.reqCreateMonster.TypeID[0])
+				writer.WriteField("type_id", tc.reqCreateMonster.TypeID[1])
+
+				// Read file from local
+				file, _ := os.Open("file_sample/image.png")
+				defer file.Close()
+
+				part, err := writer.CreateFormFile("image", "image.png")
+
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				_, err = io.Copy(part, file)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				writer.Close()
+			}
+
+			// Test access categories
+			request := httptest.NewRequest(http.MethodPatch, "http://localhost:3000/api/v1/monster/"+newMonster.ID, bodyRequest)
+			// Added header content type
+			request.Header.Set("Content-Type", writer.FormDataContentType())
+
+			// if tc.name same failed_unauthorized_as_guest dont set header
+			if tc.name != "failed_unauthorized_as_guest" {
+				// Added token in header Authorization
+				strToken := fmt.Sprintf("Bearer %s", token)
+				request.Header.Add("Authorization", strToken)
+			}
+
+			// Create new recorder
+			recorder := httptest.NewRecorder()
+
+			// Run http test
+			RouteTest.ServeHTTP(recorder, request)
+
+			// Get response
+			response := recorder.Result()
+
+			// Read all response
+			body, _ := io.ReadAll(response.Body)
+			var responseBody map[string]interface{}
+			json.Unmarshal(body, &responseBody)
+
+			if tc.name == "failed_forbidden_with_role_user" {
+				require.Equal(t, 403, response.StatusCode)
+				require.Equal(t, 403, int(responseBody["code"].(float64)))
+				require.Equal(t, "error", responseBody["status"])
+				require.Equal(t, "forbidden", responseBody["message"])
+			} else if tc.name == "failed_unauthorized_as_guest" {
+				require.Equal(t, 401, response.StatusCode)
+				require.Equal(t, 401, int(responseBody["code"].(float64)))
+				require.Equal(t, "error", responseBody["status"])
+				require.Equal(t, "unauthorized", responseBody["message"])
+			} else if tc.name == "failed_invalid_category_id" || tc.name == "failed_invalid_type_id" {
+				require.Equal(t, 400, response.StatusCode)
+				require.Equal(t, 400, int(responseBody["code"].(float64)))
+				require.Equal(t, "error", responseBody["status"])
+				require.Equal(t, "update monster failed", responseBody["message"])
+				require.Equal(t, "invalid category id or type id, please check valid id in each of their list", responseBody["data"].(map[string]interface{})["errors"])
+			} else if tc.name == "success_with_role_admin_with_image" {
+				require.Equal(t, 200, response.StatusCode)
+				require.Equal(t, 200, int(responseBody["code"].(float64)))
+				require.Equal(t, "success", responseBody["status"])
+				require.Equal(t, "Update monster success", responseBody["message"])
+				require.NotEmpty(t, responseBody["data"])
+
+				var contextData = responseBody["data"].(map[string]any)
+
+				require.Equal(t, newMonster.ID, contextData["id"])
+
+				require.NotEqual(t, newMonster.Name, contextData["name"])
+				require.NotEqual(t, newMonster.Description, contextData["description"])
+				require.NotEqual(t, newMonster.Length, float32(contextData["length"].(float64)))
+				require.NotEqual(t, newMonster.Weight, uint16(contextData["weight"].(float64)))
+				require.NotEqual(t, newMonster.Hp, uint16(contextData["hp"].(float64)))
+				require.NotEqual(t, newMonster.Attack, uint16(contextData["attack"].(float64)))
+				require.NotEqual(t, newMonster.Defends, uint16(contextData["defends"].(float64)))
+				require.NotEqual(t, newMonster.Speed, uint16(contextData["speed"].(float64)))
+				require.NotEqual(t, newMonster.Catched, contextData["catched"].(bool))
+
+				require.NotEqual(t, newMonster.ImageURL, contextData["image_url"])
+
+				require.NotEmpty(t, contextData["category_name"])
+
+				require.NotEqual(t, 0, len(contextData["types"].([]any)))
+				for _, ty := range contextData["types"].([]any) {
+					listType := ty.(map[string]any)
+					require.NotEmpty(t, listType["name"])
+				}
+			} else {
+				// if tc.name == "update_success_with_field_empty"
+				require.Equal(t, 200, response.StatusCode)
+				require.Equal(t, 200, int(responseBody["code"].(float64)))
+				require.Equal(t, "success", responseBody["status"])
+				require.Equal(t, "Update monster success", responseBody["message"])
+				require.NotEmpty(t, responseBody["data"])
+
+				var contextData = responseBody["data"].(map[string]any)
+
+				require.Equal(t, newMonster.ID, contextData["id"])
+				require.NotEmpty(t, contextData["category_name"])
+
+				require.Equal(t, newMonster.Name, contextData["name"])
+				require.Equal(t, newMonster.Description, contextData["description"])
+				require.Equal(t, newMonster.Length, float32(contextData["length"].(float64)))
+				require.Equal(t, newMonster.Weight, uint16(contextData["weight"].(float64)))
+				require.Equal(t, newMonster.Hp, uint16(contextData["hp"].(float64)))
+				require.Equal(t, newMonster.Attack, uint16(contextData["attack"].(float64)))
+				require.Equal(t, newMonster.Defends, uint16(contextData["defends"].(float64)))
+				require.Equal(t, newMonster.Speed, uint16(contextData["speed"].(float64)))
+				require.Equal(t, newMonster.Catched, contextData["catched"])
+				require.Equal(t, newMonster.ImageURL, contextData["image_url"])
+
+				require.NotEqual(t, 0, len(contextData["types"].([]any)))
+				for _, ty := range contextData["types"].([]any) {
+					listType := ty.(map[string]any)
+					require.NotEmpty(t, listType["name"])
+				}
+			}
 		})
 	}
 }

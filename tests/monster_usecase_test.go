@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/letenk/pokedex/models/domain"
 	"github.com/letenk/pokedex/models/web"
 	"github.com/letenk/pokedex/repository"
 	"github.com/letenk/pokedex/usecase"
@@ -17,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateMonsterUsecase(t *testing.T) {
+func RandomCreateMonsterUsecase(t *testing.T) domain.Monster {
 	t.Parallel()
 
 	// Read file from local
@@ -27,7 +28,7 @@ func TestCreateMonsterUsecase(t *testing.T) {
 	// File name formate
 	now := time.Now()
 	nowRFC3339 := now.Format(time.RFC3339)
-	fileName := fmt.Sprintf(`%s-%v-%s`, "usecasetest", nowRFC3339, "image.png")
+	fileName := fmt.Sprintf(`%s_%v_%s`, "usecase_create_test", nowRFC3339, "image.png")
 
 	repositoryMonster := repository.NewMonsterRespository(ConnTest)
 	usecaseMonster := usecase.NewUsecaseMonster(repositoryMonster)
@@ -101,6 +102,7 @@ func TestCreateMonsterUsecase(t *testing.T) {
 		},
 	}
 
+	var monster domain.Monster
 	// Test
 	for i := range testCases {
 		tc := testCases[i]
@@ -115,7 +117,8 @@ func TestCreateMonsterUsecase(t *testing.T) {
 			require.NotEmpty(t, newMonster.ID)
 			require.NotEmpty(t, newMonster.CreatedAt)
 			require.NotEmpty(t, newMonster.UpdatedAt)
-			require.NotEmpty(t, newMonster.Image)
+			require.NotEmpty(t, newMonster.ImageName)
+			require.NotEmpty(t, newMonster.ImageURL)
 
 			require.Equal(t, tc.data.Name, newMonster.Name)
 			require.Equal(t, tc.data.CategoryID, newMonster.CategoryID)
@@ -126,8 +129,16 @@ func TestCreateMonsterUsecase(t *testing.T) {
 			require.Equal(t, tc.data.Attack, newMonster.Attack)
 			require.Equal(t, tc.data.Defends, newMonster.Defends)
 			require.Equal(t, tc.data.Speed, newMonster.Speed)
+
+			monster = newMonster
 		}
 	}
+
+	return monster
+}
+
+func TestCreateMonsterUsecase(t *testing.T) {
+	RandomCreateMonsterUsecase(t)
 }
 
 func TestFindAllMonsterUsecase(t *testing.T) {
@@ -204,7 +215,8 @@ func TestFindAllMonsterUsecase(t *testing.T) {
 				require.NotEmpty(t, monster.Name)
 				require.NotEmpty(t, monster.Category.Name)
 				require.NotEmpty(t, strconv.FormatBool(monster.Catched))
-				require.NotEmpty(t, monster.Image)
+				require.NotEmpty(t, monster.ImageName)
+				require.NotEmpty(t, monster.ImageURL)
 
 				require.NotEqual(t, 0, len(monster.Types))
 				for i := 0; i < len(monster.Types); i++ {
@@ -260,7 +272,8 @@ func TestFindByIDMonsterUsecase(t *testing.T) {
 				require.Equal(t, newMonster.Defends, monster.Defends)
 				require.Equal(t, newMonster.Speed, monster.Speed)
 				require.Equal(t, newMonster.Catched, monster.Catched)
-				require.Equal(t, newMonster.Image, monster.Image)
+				require.Equal(t, newMonster.ImageName, monster.ImageName)
+				require.Equal(t, newMonster.ImageURL, monster.ImageURL)
 
 				for _, ty := range monster.Types {
 					require.NotEmpty(t, ty.Name)
@@ -272,6 +285,211 @@ func TestFindByIDMonsterUsecase(t *testing.T) {
 				errTest = errors.New(errMessage)
 				require.Equal(t, errTest, err)
 			}
+		})
+	}
+}
+
+func TestUpdateMonsterUsecase(t *testing.T) {
+	// File name format
+	now := time.Now()
+	nowRFC3339 := now.Format(time.RFC3339)
+	fileName := fmt.Sprintf(`%s_%v_%s`, "usecase_update_test", nowRFC3339, "image.png")
+
+	// Create random monsters
+	newMonster, _ := RandomCreateMonster(t)
+	repositoryMonster := repository.NewMonsterRespository(ConnTest)
+	usecaseMonster := usecase.NewUsecaseMonster(repositoryMonster)
+
+	var randTypes []string
+	var randCategories []string
+	// Get data random category and type
+	for i := 0; i < 3; i++ {
+		randCategory, randType := RandomCategoryAndType()
+		randTypes = append(randTypes, randType)
+		randCategories = append(randCategories, randCategory)
+	}
+
+	testCases := []struct {
+		id       string
+		name     string
+		fileName string
+		req      web.MonsterUpdateRequest
+	}{
+		{
+			id:       newMonster.ID,
+			name:     "update_success_with_field_empty",
+			fileName: "",
+			req: web.MonsterUpdateRequest{
+				Name:        "",
+				CategoryID:  "",
+				Description: "",
+				Length:      "",
+				Weight:      "",
+				Hp:          "",
+				Attack:      "",
+				Defends:     "",
+				Speed:       "",
+				Catched:     "",
+			},
+		},
+		{
+			id:       newMonster.ID,
+			name:     "update_success_without_image",
+			fileName: "",
+			req: web.MonsterUpdateRequest{
+				Name:        "UPDATED",
+				CategoryID:  randCategories[2],
+				Description: "UPDATED",
+				Length:      "1.1",
+				Weight:      "1",
+				Hp:          "1",
+				Attack:      "1",
+				Defends:     "1",
+				Speed:       "1",
+				Catched:     "true",
+				TypeID:      randTypes,
+			},
+		},
+		{
+			id:       newMonster.ID,
+			name:     "update_success_with_image",
+			fileName: fileName,
+			req: web.MonsterUpdateRequest{
+				Name:        "UPDATED",
+				CategoryID:  randCategories[0],
+				Description: "UPDATED",
+				Length:      "1.1",
+				Weight:      "1",
+				Hp:          "1",
+				Attack:      "1",
+				Defends:     "1",
+				Speed:       "1",
+				Catched:     "true",
+				TypeID:      randTypes,
+			},
+		},
+		{
+			id:       newMonster.ID,
+			name:     "update_failed_category_id_invalid",
+			fileName: "",
+			req: web.MonsterUpdateRequest{
+				Name:        "UPDATED",
+				CategoryID:  "719d94b8-81a8-48ba-8052-0bdeda9643ad",
+				Description: "UPDATED",
+				Length:      "1.1",
+				Weight:      "1",
+				Hp:          "1",
+				Attack:      "1",
+				Defends:     "1",
+				Speed:       "1",
+				Catched:     "true",
+				TypeID:      randTypes,
+			},
+		},
+		{
+			id:       newMonster.ID,
+			name:     "update_failed_types_id_invalid",
+			fileName: "",
+			req: web.MonsterUpdateRequest{
+				Name:        "UPDATED",
+				CategoryID:  randCategories[0],
+				Description: "UPDATED",
+				Length:      "1.1",
+				Weight:      "1",
+				Hp:          "1",
+				Attack:      "1",
+				Defends:     "1",
+				Speed:       "1",
+				Catched:     "true",
+				TypeID:      []string{"558160ef-e8f5-4951-b5f4-feeb0815b510", "d5a8d4bb-eb0a-44a4-ae46-eb2af2b2002d"},
+			},
+		},
+	}
+
+	// Test
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			// Read file from local
+			file, _ := os.Open("file_sample/image.png")
+			defer file.Close()
+
+			// Update
+			updatedMonster, err := usecaseMonster.Update(context.Background(), tc.id, tc.req, file, tc.fileName)
+
+			if tc.name == "update_failed_category_id_invalid" || tc.name == "update_failed_types_id_invalid" {
+				var errTest error
+				errMessage := fmt.Sprint("invalid category id or type id, please check valid id in each of their list")
+				errTest = errors.New(errMessage)
+				require.Equal(t, errTest, err)
+			} else if tc.name == "update_success_with_field_empty" {
+				require.NoError(t, err)
+
+				require.Equal(t, newMonster.ID, updatedMonster.ID)
+				require.Equal(t, newMonster.Name, updatedMonster.Name)
+				require.Equal(t, newMonster.CategoryID, updatedMonster.CategoryID)
+				require.Equal(t, newMonster.Description, updatedMonster.Description)
+				require.Equal(t, newMonster.Length, updatedMonster.Length)
+				require.Equal(t, newMonster.Weight, updatedMonster.Weight)
+				require.Equal(t, newMonster.Hp, updatedMonster.Hp)
+				require.Equal(t, newMonster.Attack, updatedMonster.Attack)
+				require.Equal(t, newMonster.Defends, updatedMonster.Defends)
+				require.Equal(t, newMonster.Speed, updatedMonster.Speed)
+				require.Equal(t, newMonster.Catched, updatedMonster.Catched)
+				require.Equal(t, newMonster.ImageName, updatedMonster.ImageName)
+				require.Equal(t, newMonster.ImageURL, updatedMonster.ImageURL)
+
+				for i := 0; i < len(updatedMonster.TypeID); i++ {
+					require.Equal(t, newMonster.TypeID[i], updatedMonster.TypeID[i])
+				}
+			} else if tc.name == "update_success_with_image" {
+				require.NoError(t, err)
+
+				require.Equal(t, newMonster.ID, updatedMonster.ID)
+
+				require.NotEqual(t, newMonster.Name, updatedMonster.Name)
+				require.NotEqual(t, newMonster.Category.Name, updatedMonster.Category.Name)
+				require.NotEqual(t, newMonster.Description, updatedMonster.Description)
+				require.NotEqual(t, newMonster.Length, updatedMonster.Length)
+				require.NotEqual(t, newMonster.Weight, updatedMonster.Weight)
+				require.NotEqual(t, newMonster.Hp, updatedMonster.Hp)
+				require.NotEqual(t, newMonster.Attack, updatedMonster.Attack)
+				require.NotEqual(t, newMonster.Defends, updatedMonster.Defends)
+				require.NotEqual(t, newMonster.Speed, updatedMonster.Speed)
+				require.NotEqual(t, newMonster.Catched, updatedMonster.Catched)
+
+				require.NotEqual(t, newMonster.ImageName, updatedMonster.ImageName)
+				require.NotEqual(t, newMonster.ImageURL, updatedMonster.ImageURL)
+
+				for i := 0; i < len(updatedMonster.TypeID); i++ {
+					require.NotEqual(t, newMonster.TypeID[i], updatedMonster.TypeID[i])
+				}
+			} else {
+				// If tc.name == "update_success_without_image"
+				require.NoError(t, err)
+
+				require.Equal(t, newMonster.ID, updatedMonster.ID)
+				require.Equal(t, newMonster.ImageName, updatedMonster.ImageName)
+				require.Equal(t, newMonster.ImageURL, updatedMonster.ImageURL)
+
+				require.NotEqual(t, newMonster.Name, updatedMonster.Name)
+				require.NotEqual(t, newMonster.CategoryID, updatedMonster.CategoryID)
+				require.NotEqual(t, newMonster.Description, updatedMonster.Description)
+				require.NotEqual(t, newMonster.Length, updatedMonster.Length)
+				require.NotEqual(t, newMonster.Weight, updatedMonster.Weight)
+				require.NotEqual(t, newMonster.Hp, updatedMonster.Hp)
+				require.NotEqual(t, newMonster.Attack, updatedMonster.Attack)
+				require.NotEqual(t, newMonster.Defends, updatedMonster.Defends)
+				require.NotEqual(t, newMonster.Speed, updatedMonster.Speed)
+				require.NotEqual(t, newMonster.Catched, updatedMonster.Catched)
+
+				for i := 0; i < len(updatedMonster.TypeID); i++ {
+					require.NotEqual(t, newMonster.TypeID[i], updatedMonster.TypeID[i])
+				}
+			}
+
 		})
 	}
 }
