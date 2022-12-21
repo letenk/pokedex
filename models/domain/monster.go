@@ -16,7 +16,8 @@ type Monster struct {
 	Defends     uint16
 	Speed       uint16
 	Catched     bool
-	Image       string
+	ImageName   string
+	ImageURL    string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 	TypeID      []string `gorm:"-"`                       // Ignore as field column

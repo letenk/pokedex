@@ -4,11 +4,13 @@ import (
 	"context"
 	"log"
 	"mime/multipart"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/letenk/pokedex/models/domain"
 	"github.com/letenk/pokedex/models/web"
@@ -17,9 +19,10 @@ import (
 )
 
 type MonsterUsecase interface {
-	Create(ctx context.Context, monster web.MonsterCreateRequest, file multipart.File, fileName string) (domain.Monster, error)
 	FindAll(ctx context.Context, reqQuery web.MonsterQueryRequest) ([]domain.Monster, error)
 	FindByID(ctx context.Context, ID string) (domain.Monster, error)
+	Create(ctx context.Context, monster web.MonsterCreateRequest, file multipart.File, fileName string) (domain.Monster, error)
+	Update(ctx context.Context, ID string, reqUpdate web.MonsterUpdateRequest, file multipart.File, fileName string) (domain.Monster, error)
 }
 
 type monsterUsecase struct {
@@ -72,8 +75,47 @@ func UploadToAwsS3(ctx context.Context, file multipart.File, fileName string) (s
 	return res.Location, nil
 }
 
-func (u *monsterUsecase) Create(ctx context.Context, req web.MonsterCreateRequest, file multipart.File, fileName string) (domain.Monster, error) {
+func DeleteItemFromAwsS3(ctx context.Context, keyName string) error {
+	// Load Config
+	config, err := util.LoadConfig(".")
+	if err != nil {
+		log.Fatal("cannot load config:", err)
+	}
+	// Config
+	s3Config := &aws.Config{
+		Region:      aws.String(config.AWS_REGION), // set region aws
+		Credentials: credentials.NewStaticCredentials(config.AWS_KEY_ID, config.AWS_SECRET_KEY, ""),
+	}
 
+	// Create new instance session
+	sess := session.New(s3Config)
+
+	// Creates a new instance of the S3 client with a session.
+	svc := s3.New(sess)
+
+	// Delete Object
+	_, err = svc.DeleteObjectWithContext(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(config.AWS_BUCKET_NAME),
+		Key:    aws.String(keyName),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	err = svc.WaitUntilObjectNotExists(&s3.HeadObjectInput{
+		Bucket: aws.String(config.AWS_BUCKET_NAME),
+		Key:    aws.String(keyName),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *monsterUsecase) Create(ctx context.Context, req web.MonsterCreateRequest, file multipart.File, fileName string) (domain.Monster, error) {
 	// Passing data request into object monster
 	monster := domain.Monster{
 		Name:        req.Name,
@@ -86,6 +128,14 @@ func (u *monsterUsecase) Create(ctx context.Context, req web.MonsterCreateReques
 		Defends:     req.Defends,
 		Speed:       req.Speed,
 		TypeID:      req.TypeID,
+		ImageName:   fileName,
+		ImageURL:    fileName,
+	}
+
+	// Create
+	monster, err := u.repository.Create(ctx, monster)
+	if err != nil {
+		return monster, err
 	}
 
 	// Upload to aws S3
@@ -93,11 +143,12 @@ func (u *monsterUsecase) Create(ctx context.Context, req web.MonsterCreateReques
 	if err != nil {
 		return monster, err
 	}
-	// Passing image location in aws to object monster
-	monster.Image = imageLocationS3
 
-	// Create
-	monster, err = u.repository.Create(ctx, monster)
+	// Passing image location in aws to object monster
+	monster.ImageURL = imageLocationS3
+
+	// Update image
+	_, err = u.repository.Update(ctx, monster)
 	if err != nil {
 		return monster, err
 	}
@@ -123,4 +174,130 @@ func (u *monsterUsecase) FindByID(ctx context.Context, ID string) (domain.Monste
 	}
 
 	return monster, nil
+}
+
+func (u *monsterUsecase) Update(ctx context.Context, ID string, reqUpdate web.MonsterUpdateRequest, file multipart.File, fileName string) (domain.Monster, error) {
+
+	// Find by id
+	currentMonster, err := u.repository.FindByID(ctx, ID)
+	if err != nil {
+		return currentMonster, err
+	}
+	// Parse reqUpdate form when not empty
+	if reqUpdate.Name != "" {
+		currentMonster.Name = reqUpdate.Name
+	}
+	if reqUpdate.CategoryID != "" {
+		currentMonster.CategoryID = reqUpdate.CategoryID
+	}
+	if reqUpdate.Description != "" {
+		currentMonster.Description = reqUpdate.Description
+	}
+	if reqUpdate.Length != "" {
+		floatLength, err := strconv.ParseFloat(reqUpdate.Length, 32)
+		if err != nil {
+			return currentMonster, err
+		}
+		currentMonster.Length = float32(floatLength)
+	}
+	if reqUpdate.Weight != "" {
+		intWeight, err := strconv.Atoi(reqUpdate.Weight)
+		if err != nil {
+			return currentMonster, err
+		}
+		currentMonster.Weight = uint16(intWeight)
+	}
+	if reqUpdate.Hp != "" {
+		intHp, err := strconv.Atoi(reqUpdate.Hp)
+		if err != nil {
+			return currentMonster, err
+		}
+		currentMonster.Hp = uint16(intHp)
+	}
+	if reqUpdate.Attack != "" {
+		intAttack, err := strconv.Atoi(reqUpdate.Attack)
+		if err != nil {
+			return currentMonster, err
+		}
+		currentMonster.Attack = uint16(intAttack)
+	}
+	if reqUpdate.Defends != "" {
+		intDefends, err := strconv.Atoi(reqUpdate.Defends)
+		if err != nil {
+			return currentMonster, err
+		}
+		currentMonster.Defends = uint16(intDefends)
+	}
+	if reqUpdate.Speed != "" {
+		intSpeed, err := strconv.Atoi(reqUpdate.Speed)
+		if err != nil {
+			return currentMonster, err
+		}
+		currentMonster.Speed = uint16(intSpeed)
+	}
+	if reqUpdate.Catched != "" {
+		catchedBool, err := strconv.ParseBool(reqUpdate.Catched)
+		if err != nil {
+			return currentMonster, err
+		}
+		currentMonster.Catched = catchedBool
+	}
+
+	if len(reqUpdate.TypeID) != 0 {
+		currentMonster.TypeID = reqUpdate.TypeID
+	}
+
+	dataUpdate := domain.Monster{
+		ID:          currentMonster.ID,
+		Name:        currentMonster.Name,
+		CategoryID:  currentMonster.CategoryID,
+		Description: currentMonster.Description,
+		Length:      currentMonster.Length,
+		Weight:      currentMonster.Weight,
+		Hp:          currentMonster.Hp,
+		Attack:      currentMonster.Attack,
+		Defends:     currentMonster.Defends,
+		Speed:       currentMonster.Speed,
+		Catched:     currentMonster.Catched,
+		ImageName:   currentMonster.ImageName,
+		ImageURL:    currentMonster.ImageURL,
+		TypeID:      reqUpdate.TypeID,
+	}
+
+	// Update monster image
+	monsterUpdated, err := u.repository.Update(ctx, dataUpdate)
+	if err != nil {
+		return currentMonster, err
+	}
+
+	if fileName != "" {
+		ctxToAws, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		// Remove item from aws
+		err := DeleteItemFromAwsS3(ctxToAws, monsterUpdated.ImageName)
+
+		if err != nil {
+			return currentMonster, err
+		}
+
+		// Upload new image to aws S3
+		newImageLocationS3, err := UploadToAwsS3(ctxToAws, file, fileName)
+		if err != nil {
+			return currentMonster, err
+		}
+
+		// Update current imageName to new image and new url image
+		monsterUpdated.ImageName = fileName
+		monsterUpdated.ImageURL = newImageLocationS3
+
+		// Update monster image
+		_, err = u.repository.Update(ctx, monsterUpdated)
+		if err != nil {
+			return currentMonster, err
+		}
+	}
+
+	return monsterUpdated, nil
+
 }

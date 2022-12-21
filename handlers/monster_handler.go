@@ -98,10 +98,10 @@ func (h *monsterHandler) Create(c *gin.Context) {
 		return
 	}
 
-	// File name formate
+	// File name format
 	now := time.Now()
 	nowRFC3339 := now.Format(time.RFC3339)
-	fileName := fmt.Sprintf(`%s-%v-%s`, currentUser.ID, nowRFC3339, fileHeader.Filename)
+	fileName := fmt.Sprintf(`%s_%v_%s`, currentUser.ID, nowRFC3339, fileHeader.Filename)
 
 	// Create new user
 	_, err = h.usecase.Create(c.Request.Context(), req, file, fileName)
@@ -201,4 +201,109 @@ func (h *monsterHandler) FindByID(c *gin.Context) {
 	)
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *monsterHandler) Update(c *gin.Context) {
+	// Check Authorization
+	// Get current user login
+	currentUser := c.MustGet("currentUser").(domain.User)
+	if currentUser.Role != "admin" {
+		response := web.JSONResponseWithoutData(
+			http.StatusForbidden,
+			"error",
+			"forbidden",
+		)
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	// Get id monster from path
+	var monsterID web.MosterURI
+	err := c.ShouldBindUri(&monsterID)
+	if err != nil {
+		response := web.JSONResponseWithoutData(
+			http.StatusInternalServerError,
+			"error",
+			"internal server error",
+		)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Get payload body
+	var reqUpdate web.MonsterUpdateRequest
+	err = c.ShouldBind(&reqUpdate)
+	if err != nil {
+		errors := web.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+		response := web.JSONResponseWithData(
+			http.StatusBadRequest,
+			"error",
+			"update monster failed",
+			errorMessage,
+		)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Get file image
+	file, fileHeader, err := c.Request.FormFile("image")
+	if err != nil && err.Error() != "http: no such file" {
+		errorMessage := gin.H{"errors": err}
+		response := web.JSONResponseWithData(
+			http.StatusBadRequest,
+			"error",
+			"update monster failed",
+			errorMessage,
+		)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	var fileName string
+	if file != nil {
+		// Validate
+		valid, message := validateUploadFiles(fileHeader)
+		if !valid {
+			errorMessage := gin.H{"errors": message}
+			response := web.JSONResponseWithData(
+				http.StatusBadRequest,
+				"error",
+				"updated monster failed",
+				errorMessage,
+			)
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		// File name format
+		now := time.Now()
+		nowRFC3339 := now.Format(time.RFC3339)
+		fileName = fmt.Sprintf(`%s_%v_%s`, currentUser.ID, nowRFC3339, fileHeader.Filename)
+	}
+
+	// Update
+	monsterUpdated, err := h.usecase.Update(c.Request.Context(), monsterID.ID, reqUpdate, file, fileName)
+	if err != nil {
+		errorMessage := gin.H{"errors": err.Error()}
+		response := web.JSONResponseWithData(
+			http.StatusBadRequest,
+			"error",
+			"update monster failed",
+			errorMessage,
+		)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Create format response
+	response := web.JSONResponseWithData(
+		http.StatusOK,
+		"success",
+		"Update monster success",
+		web.FormatMonsterResponseDetail(monsterUpdated),
+	)
+
+	c.JSON(http.StatusOK, response)
+
 }

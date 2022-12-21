@@ -67,6 +67,8 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	monster.GET("/:id", handlerMonster.FindByID)
 	// Create monster
 	monster.POST("", middleware.AuthMiddleware(usecaseUser), handlerMonster.Create)
+	// Update monster
+	monster.PATCH("/:id", middleware.AuthMiddleware(usecaseUser), handlerMonster.Update)
 
 	return router
 }

@@ -32,12 +32,26 @@ type MonsterCreateRequest struct {
 	TypeID      []string              `json:"type_id" form:"type_id" binding:"required"`
 }
 
+type MonsterUpdateRequest struct {
+	Name        string   `json:"name" form:"name"`
+	CategoryID  string   `json:"category_id" form:"category_id"`
+	Description string   `json:"description" form:"description"`
+	Length      string   `json:"length" form:"length"`
+	Weight      string   `json:"weight" form:"weight"`
+	Hp          string   `json:"hp" form:"hp"`
+	Attack      string   `json:"attack" form:"attack"`
+	Defends     string   `json:"defends" form:"defends"`
+	Speed       string   `json:"speed" form:"speed"`
+	Catched     string   `json:"catched" form:"catched"`
+	TypeID      []string `json:"type_id" form:"type_id"`
+}
+
 type MonstersResponseList struct {
 	ID         string                `json:"id"`
 	Name       string                `json:"name"`
 	CategoryID string                `json:"category_name"`
 	Catched    bool                  `json:"catched"`
-	Image      string                `json:"image"`
+	ImageURL   string                `json:"image_url"`
 	Types      []MonsterTypeResponse `json:"types"`
 }
 
@@ -53,7 +67,7 @@ type MonsterResponseDetail struct {
 	Defends     uint16                `json:"defends"`
 	Speed       uint16                `json:"speed"`
 	Catched     bool                  `json:"catched"`
-	Image       string                `json:"image"`
+	ImageURL    string                `json:"image_url"`
 	Types       []MonsterTypeResponse `json:"types"`
 }
 
@@ -75,7 +89,7 @@ func FormatMonsterResponseList(monsters []domain.Monster) []MonstersResponseList
 		formatter.Name = data.Name
 		formatter.CategoryID = data.Category.Name
 		formatter.Catched = data.Catched
-		formatter.Image = data.Image
+		formatter.ImageURL = data.ImageURL
 
 		monsterTypes := []MonsterTypeResponse{}
 		for _, t := range data.Types {
@@ -106,7 +120,7 @@ func FormatMonsterResponseDetail(monster domain.Monster) MonsterResponseDetail {
 	formatter.Defends = monster.Defends
 	formatter.Speed = monster.Speed
 	formatter.Catched = monster.Catched
-	formatter.Image = monster.Image
+	formatter.ImageURL = monster.ImageURL
 
 	monsterTypes := []MonsterTypeResponse{}
 	for _, t := range monster.Types {

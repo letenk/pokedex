@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS monsters (
   "defends" int NOT NULL,
   "speed" int NOT NULL,
   "catched" boolean NOT NULL DEFAULT false,
-  "image" varchar NOT NULL,
+  "image_name" varchar NOT NULL,
+  "image_url" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
