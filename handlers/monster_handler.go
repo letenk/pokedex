@@ -374,3 +374,54 @@ func (h *monsterHandler) UpdateMarkMonsterCaptured(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+func (h *monsterHandler) Delete(c *gin.Context) {
+	// Check Authorization
+	// Get current user login
+	currentUser := c.MustGet("currentUser").(domain.User)
+	if currentUser.Role != "admin" {
+		response := web.JSONResponseWithoutData(
+			http.StatusForbidden,
+			"error",
+			"forbidden",
+		)
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	// Get id monster from path
+	var monsterID web.MosterURI
+	err := c.ShouldBindUri(&monsterID)
+	if err != nil {
+		response := web.JSONResponseWithoutData(
+			http.StatusInternalServerError,
+			"error",
+			"internal server error",
+		)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Delete
+	_, err = h.usecase.Delete(c.Request.Context(), monsterID.ID)
+	if err != nil {
+		errorMessage := gin.H{"errors": err.Error()}
+		response := web.JSONResponseWithData(
+			http.StatusBadRequest,
+			"error",
+			"delete monster failed",
+			errorMessage,
+		)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Create format response
+	response := web.JSONResponseWithoutData(
+		http.StatusOK,
+		"success",
+		"monster deleted",
+	)
+
+	c.JSON(http.StatusOK, response)
+}

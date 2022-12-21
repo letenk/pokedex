@@ -456,8 +456,24 @@ func TestUpdateMonsterRepository(t *testing.T) {
 					require.NotEqual(t, newMonster.TypeID[i], updatedMonster.TypeID[i])
 				}
 			}
-
 		})
 	}
+}
+
+func TestDeleteMonsterRepository(t *testing.T) {
+	t.Parallel()
+	newMonster, _ := RandomCreateMonster(t)
+
+	repositoryMonster := repository.NewMonsterRespository(ConnTest)
+	ctx := context.Background()
+
+	ok, err := repositoryMonster.Delete(ctx, newMonster)
+
+	require.NoError(t, err)
+	require.True(t, ok)
+
+	// Check monster in table
+	monster, _ := repositoryMonster.FindByID(ctx, newMonster.ID)
+	require.Empty(t, monster.ID)
 
 }

@@ -18,6 +18,7 @@ type MonsterRepository interface {
 	FindByID(ctx context.Context, ID string) (domain.Monster, error)
 	Create(ctx context.Context, monster domain.Monster) (domain.Monster, error)
 	Update(ctx context.Context, monster domain.Monster) (domain.Monster, error)
+	Delete(ctx context.Context, monster domain.Monster) (bool, error)
 }
 
 type monsterRespository struct {
@@ -210,4 +211,34 @@ func (r *monsterRespository) Update(ctx context.Context, monster domain.Monster)
 	}
 
 	return monsterUpdated, nil
+}
+
+func (r *monsterRespository) Delete(ctx context.Context, monster domain.Monster) (bool, error) {
+	// Create a context in order to disconnect
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	// Cancel context after all process ends
+	defer cancel()
+
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+
+		// Remove all type which is monster_id with this id
+		err := tx.WithContext(ctx).Where("monster_id = ?", monster.ID).Delete(&domain.MonsterType{}).Error
+		if err != nil {
+			return err
+		}
+
+		// Remove monster from table monster
+		err = tx.WithContext(ctx).Where("id = ?", monster.ID).Delete(&domain.Monster{}).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

@@ -528,3 +528,52 @@ func TestUpdateMarkMonsterCapturedUsecase(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteMonsterUsecase(t *testing.T) {
+	newMonster := RandomCreateMonsterUsecase(t)
+
+	repositoryMonster := repository.NewMonsterRespository(ConnTest)
+	usecaseMonster := usecase.NewUsecaseMonster(repositoryMonster)
+
+	testCases := []struct {
+		name      string
+		idMonster string
+	}{
+		{
+			name:      "delete_monster_success",
+			idMonster: newMonster.ID,
+		},
+		{
+			name:      "delete_monster_failed_monster_not_found",
+			idMonster: "368bd987-dec6-4405-a036-bc1232db21b2",
+		},
+	}
+
+	// Test
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			// Delete
+			ok, err := usecaseMonster.Delete(context.Background(), tc.idMonster)
+
+			if tc.name == "delete_monster_success" {
+				require.NoError(t, err)
+				require.True(t, ok)
+
+				// Find by id
+				monster, err := usecaseMonster.FindByID(context.Background(), tc.idMonster)
+				require.Empty(t, monster.ID)
+
+				msg := fmt.Sprintf("monster with id %s not found", tc.idMonster)
+				require.Equal(t, msg, err.Error())
+			} else {
+				require.Error(t, err)
+
+				msg := fmt.Sprintf("monster with id %s not found", tc.idMonster)
+				require.Equal(t, msg, err.Error())
+			}
+		})
+	}
+}

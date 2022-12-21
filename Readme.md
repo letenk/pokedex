@@ -37,7 +37,7 @@
         - [x] Upload image to aws s3
     - [x] Update (admin only)
     - [x] Update as mark a moster as captured (user only)
-    - [ ] Delete (admin only)
+    - [x] Delete (admin only)
     - [x] Get all of list categories (admin only)
     - [x] Get all of list types (admin only)
     - [x] Login

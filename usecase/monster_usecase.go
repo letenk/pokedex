@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"mime/multipart"
 	"strconv"
@@ -24,6 +26,7 @@ type MonsterUsecase interface {
 	Create(ctx context.Context, monster web.MonsterCreateRequest, file multipart.File, fileName string) (domain.Monster, error)
 	Update(ctx context.Context, ID string, reqUpdate web.MonsterUpdateRequest, file multipart.File, fileName string) (domain.Monster, error)
 	UpdateMarkMonsterCaptured(ctx context.Context, ID string, reqUpdate web.MonsterUpdateRequestMonsterCapture) (bool, error)
+	Delete(ctx context.Context, ID string) (bool, error)
 }
 
 type monsterUsecase struct {
@@ -315,6 +318,44 @@ func (u *monsterUsecase) UpdateMarkMonsterCaptured(ctx context.Context, ID strin
 	_, err = u.repository.Update(ctx, currentMonster)
 	if err != nil {
 		return false, err
+	}
+
+	return true, nil
+}
+
+func (u *monsterUsecase) Delete(ctx context.Context, ID string) (bool, error) {
+	// Find monster
+	monster, err := u.repository.FindByID(ctx, ID)
+
+	if monster.ID == "" {
+		var msgNotfound error
+		msg := fmt.Sprintf("monster with id %s not found", ID)
+		msgNotfound = errors.New(msg)
+
+		return false, msgNotfound
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	// Delete
+	ok, err := u.repository.Delete(ctx, monster)
+	if err != nil {
+		return false, err
+	}
+
+	// Remove image in aws
+	if ok {
+		ctxToAws, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		// Remove item from aws
+		err := DeleteItemFromAwsS3(ctxToAws, monster.ImageName)
+
+		if err != nil {
+			return false, err
+		}
 	}
 
 	return true, nil
