@@ -7,8 +7,6 @@
 
 [Swagger/API Spesification](https://app.swaggerhub.com/apis/DARMAWANRIZKY43/POKEDEX/1.0.0#/Monsters/get_api_v1_monsters)
 
-
-# Architecture Diagram
 ## Local Development
 ![architecture diagram local development](/assets/use-deall-architecture-diagram-local-development.png)
 
@@ -24,7 +22,6 @@
     - [x] Swagger
     - [x] Postman
     - [x] Database Schema
-- [ ] Architecture diagram flow CRUD and Login
 - [x] CRUD
     - [x] Get all of list monsters
         - [x] Search by name
