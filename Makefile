@@ -1,3 +1,13 @@
+IMAGE_TAG_NAME=letenk/pokedex:latest
+
+## build_image: build app to image docker
+build_image:
+	docker build . -t ${IMAGE_TAG_NAME} -f Dockerfile
+
+## push_image: push image to docker hub
+push_image:
+	docker push ${IMAGE_TAG_NAME}
+
 ## up: starts all containers in the background without forcing build
 up:
 	@echo "Starting Docker images..."
