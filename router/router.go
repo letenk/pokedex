@@ -69,6 +69,10 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	monster.POST("", middleware.AuthMiddleware(usecaseUser), handlerMonster.Create)
 	// Update monster
 	monster.PATCH("/:id", middleware.AuthMiddleware(usecaseUser), handlerMonster.Update)
+	// Update monster
+	monster.PATCH("/:id/captured", middleware.AuthMiddleware(usecaseUser), handlerMonster.UpdateMarkMonsterCaptured)
+	// Update monster
+	monster.DELETE("/:id", middleware.AuthMiddleware(usecaseUser), handlerMonster.Delete)
 
 	return router
 }

@@ -305,5 +305,123 @@ func (h *monsterHandler) Update(c *gin.Context) {
 	)
 
 	c.JSON(http.StatusOK, response)
+}
 
+func (h *monsterHandler) UpdateMarkMonsterCaptured(c *gin.Context) {
+	// Check Authorization
+	// Get current user login
+	currentUser := c.MustGet("currentUser").(domain.User)
+	if currentUser.Role != "user" {
+		response := web.JSONResponseWithoutData(
+			http.StatusForbidden,
+			"error",
+			"forbidden",
+		)
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	// Get id monster from path
+	var monsterID web.MosterURI
+	err := c.ShouldBindUri(&monsterID)
+	if err != nil {
+		response := web.JSONResponseWithoutData(
+			http.StatusInternalServerError,
+			"error",
+			"internal server error",
+		)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Get payload body
+	var reqUpdate web.MonsterUpdateRequestMonsterCapture
+	err = c.ShouldBind(&reqUpdate)
+	if err != nil {
+		errors := web.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+		response := web.JSONResponseWithData(
+			http.StatusBadRequest,
+			"error",
+			"update monster captured failed",
+			errorMessage,
+		)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Update
+	_, err = h.usecase.UpdateMarkMonsterCaptured(c.Request.Context(), monsterID.ID, reqUpdate)
+	if err != nil {
+		errorMessage := gin.H{"errors": err.Error()}
+		response := web.JSONResponseWithData(
+			http.StatusBadRequest,
+			"error",
+			"update monster captured failed",
+			errorMessage,
+		)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	msgSuccess := fmt.Sprintf("monster with id %s updated", monsterID.ID)
+	// Create format response
+	response := web.JSONResponseWithoutData(
+		http.StatusOK,
+		"success",
+		msgSuccess,
+	)
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *monsterHandler) Delete(c *gin.Context) {
+	// Check Authorization
+	// Get current user login
+	currentUser := c.MustGet("currentUser").(domain.User)
+	if currentUser.Role != "admin" {
+		response := web.JSONResponseWithoutData(
+			http.StatusForbidden,
+			"error",
+			"forbidden",
+		)
+		c.JSON(http.StatusForbidden, response)
+		return
+	}
+
+	// Get id monster from path
+	var monsterID web.MosterURI
+	err := c.ShouldBindUri(&monsterID)
+	if err != nil {
+		response := web.JSONResponseWithoutData(
+			http.StatusInternalServerError,
+			"error",
+			"internal server error",
+		)
+		c.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	// Delete
+	_, err = h.usecase.Delete(c.Request.Context(), monsterID.ID)
+	if err != nil {
+		errorMessage := gin.H{"errors": err.Error()}
+		response := web.JSONResponseWithData(
+			http.StatusBadRequest,
+			"error",
+			"delete monster failed",
+			errorMessage,
+		)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	// Create format response
+	response := web.JSONResponseWithoutData(
+		http.StatusOK,
+		"success",
+		"monster deleted",
+	)
+
+	c.JSON(http.StatusOK, response)
 }

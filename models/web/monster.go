@@ -46,6 +46,10 @@ type MonsterUpdateRequest struct {
 	TypeID      []string `json:"type_id" form:"type_id"`
 }
 
+type MonsterUpdateRequestMonsterCapture struct {
+	Catched bool `json:"catched" form:"catched"`
+}
+
 type MonstersResponseList struct {
 	ID         string                `json:"id"`
 	Name       string                `json:"name"`

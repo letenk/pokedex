@@ -3,9 +3,9 @@
 # Documentation
 [Database Schema](https://dbdiagram.io/d/63934a1abae3ed7c4545dab5)
 
-[Postman Documentation](https://documenter.getpostman.com/view/12132212/2s8YevnUpD)
+[Postman Documentation](https://documenter.getpostman.com/view/12132212/2s8Z6scGJ9)
 
-[Swagger/API Spesification](https://app.swaggerhub.com/apis/DARMAWANRIZKY43/POKEDEX/1.0.0)
+[Swagger/API Spesification](https://app.swaggerhub.com/apis/DARMAWANRIZKY43/POKEDEX/1.0.0#/Monsters/get_api_v1_monsters)
 
 
 # Architecture Diagram
@@ -20,9 +20,9 @@
 - **Docker**
 
 # Todo
-- [ ] Documentation
+- [x] Documentation
     - [x] Swagger
-    - [ ] Postman
+    - [x] Postman
     - [x] Database Schema
 - [ ] Architecture diagram flow CRUD and Login
 - [ ] CRUD
@@ -35,9 +35,9 @@
     - [x] Get profile detail monster by id
     - [x] Add (admin only)
         - [x] Upload image to aws s3
-    - [ ] Update (admin only)
-    - [ ] Update as mark a moster as captured (user only)
-    - [ ] Delete (admin only)
+    - [x] Update (admin only)
+    - [x] Update as mark a moster as captured (user only)
+    - [x] Delete (admin only)
     - [x] Get all of list categories (admin only)
     - [x] Get all of list types (admin only)
     - [x] Login
@@ -46,3 +46,4 @@
 - [ ] Github Workflows
     - [x] Test
     - [ ] Create image docker and push into docker hub
+        - [ ] Database use aws RDS
