@@ -1,3 +1,15 @@
+# Credentials
+- Role Admin
+```javascript
+username: "admin",
+password: "password"
+```
+
+- Role User
+```javascript
+username: "user",
+password: "password"
+```
 # How To Run
 ## Run development mode
 Run development mode is use this code for run app in local machine.
