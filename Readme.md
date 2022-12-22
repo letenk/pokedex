@@ -12,7 +12,7 @@ docker-compose up -d
 ```
 
 ## Run production mode
-Running production mode uses an image from docker hub created and pushed by workflows github ci and also used database with AWS RDS.
+Running production mode uses an image from docker hub which is created and pushed by workflows github ci and also used database with AWS RDS.
 - Use makefile
 ```go
 make up_prod
