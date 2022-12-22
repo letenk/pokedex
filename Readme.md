@@ -1,4 +1,39 @@
 # How To Run
+## Run development mode
+Run development mode is use this code for run app in local machine.
+- Use makefile
+```go
+make up_build
+```
+
+- If don't use makefile
+```go
+docker-compose up -d
+```
+
+## Run production mode
+Running production mode uses an image from docker hub created and pushed by workflows github ci and also used database with AWS RDS.
+- Use makefile
+```go
+make up_prod
+```
+
+- If don't use makefile
+```go
+docker-compose -f docker-compose.prod.yml up -d 
+```
+
+## Run test
+**Note: To run test please run [Run development mode](##run-development-mode) first, for running database into container.**
+- Use makefile
+```go
+make test 
+```
+
+- If don't use makefile
+```go
+go test -v ./...
+```
 
 # Documentation
 [Database Schema](https://dbdiagram.io/d/63934a1abae3ed7c4545dab5)
@@ -40,7 +75,7 @@
     - [x] Login
         - [x] Generate Token JWT
 - [x] Containerization
-- [ ] Github Workflows
+- [x] Github Workflows
     - [x] Test
-    - [ ] Create image docker and push into docker hub
-        - [ ] Database use aws RDS
+    - [x] Create image docker and push into docker hub
+        - [x] Database use aws RDS
