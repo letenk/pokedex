@@ -42,9 +42,6 @@ go test -v ./...
 
 [Swagger/API Spesification](https://app.swaggerhub.com/apis/DARMAWANRIZKY43/POKEDEX/1.0.0#/Monsters/get_api_v1_monsters)
 
-## Local Development
-![architecture diagram local development](/assets/use-deall-architecture-diagram-local-development.png)
-
 # Tech Stack
 - **Golang**
 - **PostgreSQL**
