@@ -1,0 +1,52 @@
+name: Push-to-Docker-Hub
+
+# Trigger deployment only on push to master branch
+on:
+  push:
+    branches: [release]
+
+jobs:
+  build-docker:
+    name: "Build Docker Container and Push to Docker Hub"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: setup GO
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      
+      - name: create env file
+        env:
+          GIN_MODE: ${{ secrets.GIN_MODE}}
+          DB_DRIVER: ${{ secrets.DB_DRIVER}}
+          DB_SOURCE: ${{ secrets.DB_SOURCE}}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          AWS_Region: ${{ secrets.AWS_Region }}
+          AWS_KEY_ID: ${{ secrets.AWS_KEY_ID }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+        run: |
+          touch .env
+          echo GIN_MODE=$GIN_MODE >> app.env
+          echo DB_DRIVER=$DB_DRIVER >> app.env
+          echo DB_SOURCE=$DB_SOURCE >> app.env
+          echo JWT_SECRET=$JWT_SECRET >> app.env
+          echo AWS_Region=$AWS_Region >> app.env
+          echo AWS_KEY_ID=$AWS_KEY_ID >> app.env
+          echo AWS_SECRET_KEY=$AWS_SECRET_KEY >> app.env
+          echo AWS_BUCKET_NAME=$AWS_BUCKET_NAME >> app.env
+      
+      - name: login to docker hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }} 
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+      
+      - name: build docker container
+        run: |
+          make build_image
+      
+      - name: push docker container
+        run: |
+          make push_image

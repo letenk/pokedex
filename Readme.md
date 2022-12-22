@@ -25,7 +25,7 @@
     - [x] Postman
     - [x] Database Schema
 - [ ] Architecture diagram flow CRUD and Login
-- [ ] CRUD
+- [x] CRUD
     - [x] Get all of list monsters
         - [x] Search by name
         - [x] Filter by type
