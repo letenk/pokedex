@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jellydator/ttlcache/v2"
 	"github.com/letenk/pokedex/models/domain"
 	"github.com/letenk/pokedex/models/web"
 	"github.com/letenk/pokedex/usecase"
@@ -16,6 +18,11 @@ type typeHandler struct {
 func NewHandlerType(usecase usecase.TypeUsecase) *typeHandler {
 	return &typeHandler{usecase}
 }
+
+var (
+	cache    ttlcache.SimpleCache = ttlcache.NewCache()
+	notFound                      = ttlcache.ErrNotFound
+)
 
 func (h *typeHandler) FindAll(c *gin.Context) {
 	// Check Authorization
@@ -31,15 +38,36 @@ func (h *typeHandler) FindAll(c *gin.Context) {
 		return
 	}
 
-	// Get all
-	types, err := h.usecase.FindAll(c.Request.Context())
-	if err != nil {
-		response := web.JSONResponseWithoutData(
-			http.StatusBadRequest,
-			"error",
-			"bad request",
+	// Create context
+	ctx := c.Request.Context()
+
+	key := "types"
+	types, err := cache.Get(key)
+	if err == notFound {
+		// Get all data from db
+		types, err := h.usecase.FindAll(ctx)
+		if err != nil {
+			response := web.JSONResponseWithoutData(
+				http.StatusBadRequest,
+				"error",
+				"bad request",
+			)
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		formatResponseJSON := web.FormatTypesResponse(types)
+
+		// Cache data
+		go cache.SetWithTTL(key, formatResponseJSON, time.Hour)
+
+		jsonResponse := web.JSONResponseWithData(
+			http.StatusOK,
+			"success",
+			"list of types",
+			formatResponseJSON,
 		)
-		c.JSON(http.StatusBadRequest, response)
+		c.JSON(http.StatusOK, jsonResponse)
 		return
 	}
 
@@ -47,7 +75,7 @@ func (h *typeHandler) FindAll(c *gin.Context) {
 		http.StatusOK,
 		"success",
 		"list of types",
-		web.FormatTypesResponse(types),
+		types,
 	)
 	c.JSON(http.StatusOK, jsonResponse)
 }
