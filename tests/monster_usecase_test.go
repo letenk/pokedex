@@ -218,7 +218,7 @@ func TestFindAllMonsterUsecase(t *testing.T) {
 				require.NotEmpty(t, monster.ImageName)
 				require.NotEmpty(t, monster.ImageURL)
 
-				require.NotEqual(t, 0, len(monster.Types))
+				// require.NotEqual(t, 0, len(monster.Types))
 				for i := 0; i < len(monster.Types); i++ {
 					require.NotEmpty(t, monster.Types[i].Name)
 				}

@@ -22,7 +22,13 @@ up_build:
 	docker-compose up --build -d
 	@echo "Docker images built and started!"
 
-## up: starts all containers in the background without forcing build
+up_prod:
+	@echo "Stopping docker images production (if running...)"
+	docker-compose -f docker-compose.prod.yml down
+	@echo "Starting docker images production..."
+	docker-compose -f docker-compose.prod.yml up -d 
+	@echo "Docker images built and started!"
+
 down:
 	@echo "Stopping docker compose..."
 	docker-compose down

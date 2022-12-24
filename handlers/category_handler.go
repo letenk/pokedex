@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/letenk/pokedex/models/domain"
@@ -31,23 +32,44 @@ func (h *categoryHandler) FindAll(c *gin.Context) {
 		return
 	}
 
-	// Get all
-	categories, err := h.usecase.FindAll(c.Request.Context())
-	if err != nil {
-		response := web.JSONResponseWithoutData(
-			http.StatusBadRequest,
-			"error",
-			"bad request",
+	// Create context
+	ctx := c.Request.Context()
+
+	key := "categories"
+	categories, err := cache.Get(key)
+	if err == notFound {
+		// Get all
+		categories, err := h.usecase.FindAll(ctx)
+		if err != nil {
+			response := web.JSONResponseWithoutData(
+				http.StatusBadRequest,
+				"error",
+				"bad request",
+			)
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		formatResponseJSON := web.FormatCategoriesResponse(categories)
+
+		// Cache data
+		go cache.SetWithTTL(key, formatResponseJSON, time.Hour)
+
+		jsonResponse := web.JSONResponseWithData(
+			http.StatusOK,
+			"success",
+			"list of category",
+			formatResponseJSON,
 		)
-		c.JSON(http.StatusBadRequest, response)
+		c.JSON(http.StatusOK, jsonResponse)
 		return
 	}
 
 	jsonResponse := web.JSONResponseWithData(
 		http.StatusOK,
 		"success",
-		"list of category",
-		web.FormatCategoriesResponse(categories),
+		"list of types",
+		categories,
 	)
 	c.JSON(http.StatusOK, jsonResponse)
 }
