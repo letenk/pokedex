@@ -104,7 +104,7 @@ func (h *monsterHandler) Create(c *gin.Context) {
 	fileName := fmt.Sprintf(`%s_%v_%s`, currentUser.ID, nowRFC3339, fileHeader.Filename)
 
 	// Create new user
-	_, err = h.usecase.Create(c.Request.Context(), req, file, fileName)
+	newMonster, err := h.usecase.Create(c.Request.Context(), req, file, fileName)
 	if err != nil {
 		errorMessage := gin.H{"errors": err.Error()}
 		response := web.JSONResponseWithData(
@@ -116,6 +116,13 @@ func (h *monsterHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
+
+	// Cache for get detail
+	formatResponseJSON := web.FormatMonsterResponseDetail(newMonster)
+	key := fmt.Sprintf("monster_id_%s", newMonster.ID)
+	go cache.SetWithTTL(key, formatResponseJSON, time.Hour)
+	// Remove cache
+	go cache.Remove("monsters")
 
 	// Create format response
 	response := web.JSONResponseWithoutData(
@@ -140,29 +147,76 @@ func (h *monsterHandler) FindAll(c *gin.Context) {
 		return
 	}
 
-	// Find all montser
-	monsters, err := h.usecase.FindAll(c.Request.Context(), queryParameter)
-	if err != nil {
-		errorMessage := gin.H{"errors": err.Error()}
+	if queryParameter.Name != "" || queryParameter.Catched != "" || queryParameter.Sort != "" || queryParameter.Order != "" || len(queryParameter.Types) != 0 {
+		// Find all montser
+		monsters, err := h.usecase.FindAll(c.Request.Context(), queryParameter)
+		if err != nil {
+			errorMessage := gin.H{"errors": err.Error()}
+			response := web.JSONResponseWithData(
+				http.StatusBadRequest,
+				"error",
+				"bad request",
+				errorMessage,
+			)
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		formatResponseJSON := web.FormatMonsterResponseList(monsters)
+
+		// Create format response
 		response := web.JSONResponseWithData(
-			http.StatusBadRequest,
-			"error",
-			"bad request",
-			errorMessage,
+			http.StatusOK,
+			"success",
+			"List of monsters",
+			formatResponseJSON,
 		)
-		c.JSON(http.StatusBadRequest, response)
+
+		c.JSON(http.StatusOK, response)
 		return
 	}
 
-	// Create format response
-	response := web.JSONResponseWithData(
+	key := "monsters"
+	monsters, err := cache.Get(key)
+	if err == notFound {
+		// Find all montser
+		monsters, err := h.usecase.FindAll(c.Request.Context(), queryParameter)
+		if err != nil {
+			errorMessage := gin.H{"errors": err.Error()}
+			response := web.JSONResponseWithData(
+				http.StatusBadRequest,
+				"error",
+				"bad request",
+				errorMessage,
+			)
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		formatResponseJSON := web.FormatMonsterResponseList(monsters)
+
+		// Cache data
+		go cache.SetWithTTL(key, formatResponseJSON, time.Hour)
+
+		// Create format response
+		response := web.JSONResponseWithData(
+			http.StatusOK,
+			"success",
+			"List of monsters",
+			formatResponseJSON,
+		)
+
+		c.JSON(http.StatusOK, response)
+		return
+	}
+
+	jsonResponse := web.JSONResponseWithData(
 		http.StatusOK,
 		"success",
 		"List of monsters",
-		web.FormatMonsterResponseList(monsters),
+		monsters,
 	)
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, jsonResponse)
 }
 
 func (h *monsterHandler) FindByID(c *gin.Context) {
@@ -178,17 +232,38 @@ func (h *monsterHandler) FindByID(c *gin.Context) {
 		return
 	}
 
-	// Find by id monster
-	monsters, err := h.usecase.FindByID(c.Request.Context(), monsterID.ID)
-	if err != nil {
-		errorMessage := gin.H{"errors": err.Error()}
+	// Get from cache
+	key := fmt.Sprintf("monster_id_%s", monsterID.ID)
+	monsters, err := cache.Get(key)
+	if err == notFound {
+		// Find by id monster from database
+		monsters, err := h.usecase.FindByID(c.Request.Context(), monsterID.ID)
+		if err != nil {
+			errorMessage := gin.H{"errors": err.Error()}
+			response := web.JSONResponseWithData(
+				http.StatusBadRequest,
+				"error",
+				"bad request",
+				errorMessage,
+			)
+			c.JSON(http.StatusBadRequest, response)
+			return
+		}
+
+		// Cache for get detail
+		formatResponseJSON := web.FormatMonsterResponseDetail(monsters)
+		key := fmt.Sprintf("monster_id_%s", monsterID.ID)
+		go cache.SetWithTTL(key, formatResponseJSON, time.Hour)
+
+		// Create format response
 		response := web.JSONResponseWithData(
-			http.StatusBadRequest,
-			"error",
-			"bad request",
-			errorMessage,
+			http.StatusOK,
+			"success",
+			"profile detail of monsters",
+			formatResponseJSON,
 		)
-		c.JSON(http.StatusBadRequest, response)
+
+		c.JSON(http.StatusOK, response)
 		return
 	}
 
@@ -197,7 +272,7 @@ func (h *monsterHandler) FindByID(c *gin.Context) {
 		http.StatusOK,
 		"success",
 		"profile detail of monsters",
-		web.FormatMonsterResponseDetail(monsters),
+		monsters,
 	)
 
 	c.JSON(http.StatusOK, response)
@@ -296,12 +371,21 @@ func (h *monsterHandler) Update(c *gin.Context) {
 		return
 	}
 
+	// Cache for get detail
+	formatResponseJSON := web.FormatMonsterResponseDetail(monsterUpdated)
+	key := fmt.Sprintf("monster_id_%s", monsterID.ID)
+	// Remove cache
+	go cache.Remove(key)
+	go cache.SetWithTTL(key, formatResponseJSON, time.Hour)
+	// Remove cache
+	go cache.Remove("monsters")
+
 	// Create format response
 	response := web.JSONResponseWithData(
 		http.StatusOK,
 		"success",
 		"Update monster success",
-		web.FormatMonsterResponseDetail(monsterUpdated),
+		formatResponseJSON,
 	)
 
 	c.JSON(http.StatusOK, response)
@@ -364,6 +448,12 @@ func (h *monsterHandler) UpdateMarkMonsterCaptured(c *gin.Context) {
 		return
 	}
 
+	key := fmt.Sprintf("monster_id_%s", monsterID.ID)
+	// Remove cache
+	go cache.Remove(key)
+	// Remove cache
+	go cache.Remove("monsters")
+
 	msgSuccess := fmt.Sprintf("monster with id %s updated", monsterID.ID)
 	// Create format response
 	response := web.JSONResponseWithoutData(
@@ -415,6 +505,12 @@ func (h *monsterHandler) Delete(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
+
+	key := fmt.Sprintf("monster_id_%s", monsterID.ID)
+	// Remove cache
+	go cache.Remove(key)
+	// Remove cache
+	go cache.Remove("monsters")
 
 	// Create format response
 	response := web.JSONResponseWithoutData(
