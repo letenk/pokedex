@@ -96,7 +96,7 @@ func TestFindAllTypeHandlerTest(t *testing.T) {
 
 			// Read all response
 			body, _ := io.ReadAll(response.Body)
-			var responseBody map[string]interface{}
+			var responseBody map[string]any
 			json.Unmarshal(body, &responseBody)
 
 			if tc.name == "success_with_role_admin" {
